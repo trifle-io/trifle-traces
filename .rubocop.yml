@@ -1,0 +1,15 @@
+inherit_mode:
+  merge:
+    - Exclude
+
+AllCops:
+  TargetRubyVersion: '2.6'
+  Exclude:
+    - 'bin/**/*'
+    - 'Rakefile'
+    - 'spec/**/*'
+    - 'Gemfile'
+    - trifle-logger.gemspec
+
+Style/Documentation:
+  Enabled: false

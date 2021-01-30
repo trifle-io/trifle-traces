@@ -1,4 +1,6 @@
-require "trifle/logger/version"
+# frozen_string_literal: true
+
+require 'trifle/logger/version'
 
 module Trifle
   module Logger
