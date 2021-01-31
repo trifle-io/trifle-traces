@@ -3,6 +3,8 @@
 require 'trifle/logger/configuration'
 require 'trifle/logger/tracer/hash'
 require 'trifle/logger/tracer/null'
+require 'trifle/logger/middleware/rack'
+require 'trifle/logger/middleware/sidekiq'
 require 'trifle/logger/version'
 
 module Trifle
