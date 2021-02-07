@@ -27,10 +27,12 @@ module Trifle
     end
 
     def self.tracer
-      Thread.current[:trifle_tracer] ||= Trifle::Logger::Tracer::Null.new
+      Thread.current[:trifle_tracer]
     end
 
     def self.trace(*args, **keywords, &block)
+      return unless tracer
+
       tracer.trace(*args, **keywords, &block)
     end
   end
