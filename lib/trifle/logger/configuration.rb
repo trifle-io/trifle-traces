@@ -3,7 +3,7 @@
 module Trifle
   module Logger
     class Configuration
-      attr_accessor :callbacks
+      attr_accessor :tracer_klass, :callbacks
 
       def initialize
         @callbacks = {
