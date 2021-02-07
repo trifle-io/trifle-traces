@@ -6,6 +6,7 @@ module Trifle
       attr_accessor :tracer_klass, :callbacks
 
       def initialize
+        @tracer_klass = Trifle::Logger::Tracer::Hash
         @callbacks = {
           wrapup: []
         }

@@ -65,10 +65,6 @@ module Trifle
           @state == :success
         end
 
-        def duration
-          (data.last[:timestamp].to_i - data.first[:timestamp].to_i).to_i
-        end
-
         def wrapup
           Trifle::Logger.default.on_wrapup(self)
         end
