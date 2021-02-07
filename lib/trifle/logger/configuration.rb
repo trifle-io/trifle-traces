@@ -6,11 +6,15 @@ module Trifle
       attr_accessor :callbacks
 
       def initialize
-        @callbacks = {}
+        @callbacks = {
+          wrapup: []
+        }
       end
 
-      def itsawrap(tracer)
-        puts "Wrapping up #{tracer}"
+      def on_wrapup(tracer)
+        @callbacks.fetch(:wrapup, []).each do |c|
+          c.call(tracer)
+        end
       end
 
       def on(event, &block)

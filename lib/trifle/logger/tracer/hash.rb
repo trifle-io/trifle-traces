@@ -69,7 +69,9 @@ module Trifle
           (data.last[:timestamp].to_i - data.first[:timestamp].to_i).to_i
         end
 
-        def wrapup; end
+        def wrapup
+          Trifle::Logger.default.on_wrapup(self)
+        end
       end
     end
   end
