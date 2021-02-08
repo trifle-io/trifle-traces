@@ -32,7 +32,9 @@ module Trifle
     end
 
     def self.trace(*args, **keywords, &block)
-      return unless tracer
+      if tracer.nil?
+        return block_given? ? yield : nil
+      end
 
       tracer.trace(*args, **keywords, &block)
     end
