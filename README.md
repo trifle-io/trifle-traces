@@ -31,8 +31,25 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+It saves you from reading through your standard logger
+
+```ruby
+Trifle::Logger.trace('This is important output')
+now = Trifle::Logger.trace('And it\'s important to know it happened at') do
+  Time.now
+end
+```
+
+To being able to say what happened on 25th January 2021.
+
+```ruby
+[
+  {at: 2021-01-25 00:00:00 +0100, message: 'This is important output', state: :success, head: false, meta: false}
+  {at: 2021-01-25 00:00:00 +0100, message: 'And it\'s important to know it happened ', state: :success, head: false, meta: false}
+  {at: 2021-01-25 00:00:00 +0100, message: '=> 2021-01-25 00:00:00 +0100', state: :success, head: false, meta: true}
+]
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/trifle-logger.
+Bug reports and pull requests are welcome on GitHub at https://github.com/trifle-io/trifle-logger.
