@@ -4,13 +4,14 @@ module Trifle
   module Logger
     module Tracer
       class Hash
-        attr_accessor :key, :meta, :data, :tags, :state
+        attr_accessor :key, :meta, :data, :tags, :artifacts, :state
 
         def initialize(key:, meta: nil)
           @key = key
           @meta = meta
           @data = []
           @tags = []
+          @artifacts = []
           @state = :success
           @result_prefix = '=> '
 
@@ -55,6 +56,14 @@ module Trifle
 
         def tag(tag)
           @tags << tag
+        end
+
+        def artifact(name, path)
+          @data << {
+            at: now, message: "Artifact: #{name}",
+            state: :success, head: false, meta: true
+          }
+          @artifacts << path
         end
 
         def fail!

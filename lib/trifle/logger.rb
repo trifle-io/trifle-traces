@@ -45,6 +45,12 @@ module Trifle
       tracer.tag(tag)
     end
 
+    def self.artifact(name, path)
+      return unless tracer
+
+      tracer.artifact(name, path)
+    end
+
     def self.fail!
       return unless tracer
 
