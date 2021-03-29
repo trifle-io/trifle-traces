@@ -60,7 +60,7 @@ module Trifle
 
         def artifact(name, path)
           @data << {
-            at: now, message: "Artifact: #{name}",
+            at: now, message: name,
             state: :success, head: false, meta: false, media: true
           }
           @artifacts << path
