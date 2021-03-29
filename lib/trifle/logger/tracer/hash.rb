@@ -39,14 +39,14 @@ module Trifle
         def dump_message(message, head:, state:)
           @data << {
             at: now, message: message,
-            state: state, head: head, meta: false
+            state: state, head: head, meta: false, media: false
           }
         end
 
         def dump_result(result)
           @data << {
             at: now, message: "#{@result_prefix}#{result.inspect}",
-            state: :success, head: false, meta: true
+            state: :success, head: false, meta: true, media: false
           }
         end
 
@@ -61,7 +61,7 @@ module Trifle
         def artifact(name, path)
           @data << {
             at: now, message: "Artifact: #{name}",
-            state: :success, head: false, meta: true
+            state: :success, head: false, meta: false, media: true
           }
           @artifacts << path
         end
