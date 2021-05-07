@@ -56,5 +56,11 @@ module Trifle
 
       tracer.fail!
     end
+
+    def self.ignore!
+      return unless tracer
+
+      tracer.ignore!
+    end
   end
 end

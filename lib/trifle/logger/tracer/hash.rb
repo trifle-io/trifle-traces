@@ -4,7 +4,7 @@ module Trifle
   module Logger
     module Tracer
       class Hash
-        attr_accessor :key, :meta, :data, :tags, :artifacts, :state
+        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore
 
         def initialize(key:, meta: nil)
           @key = key
@@ -13,6 +13,7 @@ module Trifle
           @tags = []
           @artifacts = []
           @state = :success
+          @ignore = false
           @result_prefix = '=> '
 
           trace("Trifle::Trace has been initialized for #{key}")
@@ -74,8 +75,12 @@ module Trifle
           @state == :success
         end
 
+        def ignore!
+          @ignore = true
+        end
+
         def wrapup
-          Trifle::Logger.default.on_wrapup(self)
+          Trifle::Logger.default.on_wrapup(self) unless @ignore
         end
       end
     end
