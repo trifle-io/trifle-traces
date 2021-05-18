@@ -71,6 +71,10 @@ module Trifle
           @state = :error
         end
 
+        def warn!
+          @state = :warning
+        end
+
         def success?
           @state == :success
         end

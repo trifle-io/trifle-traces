@@ -57,6 +57,12 @@ module Trifle
       tracer.fail!
     end
 
+    def self.warn!
+      return unless tracer
+
+      tracer.warn!
+    end
+
     def self.ignore!
       return unless tracer
 

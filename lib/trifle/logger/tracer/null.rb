@@ -14,6 +14,8 @@ module Trifle
 
         def fail!; end
 
+        def warn!; end
+
         def ignore!; end
 
         def wrapup; end
