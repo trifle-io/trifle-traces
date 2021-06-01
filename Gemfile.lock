@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    trifle-logger (0.1.4)
+    trifle-logger (0.2.0)
 
 GEM
   remote: https://rubygems.org/

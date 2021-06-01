@@ -18,6 +18,10 @@ module Trifle
 
         def ignore!; end
 
+        def liftoff; end
+
+        def bump; end
+
         def wrapup; end
       end
     end

@@ -4,7 +4,7 @@ module Trifle
   module Logger
     module Tracer
       class Hash
-        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore
+        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
 
         def initialize(key:, meta: nil)
           @key = key
@@ -12,11 +12,12 @@ module Trifle
           @data = []
           @tags = []
           @artifacts = []
-          @state = :success
+          @state = :running
           @ignore = false
           @result_prefix = '=> '
 
           trace("Trifle::Trace has been initialized for #{key}")
+          @reference = liftoff.first
         end
 
         def keys
@@ -24,7 +25,7 @@ module Trifle
           parts.count.times.map { |i| parts[0..i].join('/') }
         end
 
-        def trace(message, state: :success, head: false)
+        def trace(message, state: :success, head: false) # rubocop:disable Metrics/MethodLength
           result = yield if block_given?
         rescue => e # rubocop:disable Style/RescueStandardError
           raise e
@@ -34,6 +35,7 @@ module Trifle
             head: head, state: block_given? && result.nil? || e ? :error : state
           )
           dump_result(result) if block_given?
+          bump
           result
         end
 
@@ -57,6 +59,8 @@ module Trifle
 
         def tag(tag)
           @tags << tag
+          bump
+          tag
         end
 
         def artifact(name, path)
@@ -65,6 +69,8 @@ module Trifle
             state: :success, head: false, meta: false, media: true
           }
           @artifacts << path
+          bump
+          path
         end
 
         def fail!
@@ -75,16 +81,37 @@ module Trifle
           @state = :warning
         end
 
+        def success!
+          @state = :success
+        end
+
         def success?
           @state == :success
+        end
+
+        def running?
+          @state == :running
         end
 
         def ignore!
           @ignore = true
         end
 
+        def liftoff
+          @bumped_at = now
+          Trifle::Logger.default.on_liftoff(self)
+        end
+
+        def bump
+          return unless @bumped_at && @bumped_at <= now - Trifle::Logger.default.bump_every
+
+          @bumped_at = now
+          Trifle::Logger.default.on_bump(self)
+        end
+
         def wrapup
-          Trifle::Logger.default.on_wrapup(self) unless @ignore
+          success! if running?
+          Trifle::Logger.default.on_wrapup(self)
         end
       end
     end
