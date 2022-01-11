@@ -6,14 +6,14 @@ module Trifle
       class Hash
         attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
 
-        def initialize(key:, meta: nil, config: nil)
+        def initialize(key:, reference: nil, meta: nil, config: nil)
           @key = key
           @meta = meta
           @config = config
           set_defaults!
 
           trace("Tracer has been initialized for #{key}")
-          @reference = liftoff.first
+          @reference = reference || liftoff.first
         end
 
         def set_defaults!
