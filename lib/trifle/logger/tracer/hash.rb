@@ -10,15 +10,19 @@ module Trifle
           @key = key
           @meta = meta
           @config = config
+          set_defaults!
+
+          trace("Tracer has been initialized for #{key}")
+          @reference = liftoff.first
+        end
+
+        def set_defaults!
           @data = []
           @tags = []
           @artifacts = []
           @state = :running
           @ignore = false
           @result_prefix = '=> '
-
-          trace("Tracer has been initialized for #{key}")
-          @reference = liftoff.first
         end
 
         def config
