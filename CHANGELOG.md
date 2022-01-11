@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.3.0] - 2022-01-11
+
+- Feat: Rename tracer_klass to tracer_class and use it consistently through middlewares
+
 ## [0.2.2] - 2022-01-11
 
 - Feat: Allow tracer to accept custom configuration
