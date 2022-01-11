@@ -3,10 +3,10 @@
 module Trifle
   module Logger
     class Configuration
-      attr_accessor :tracer_klass, :callbacks, :bump_every
+      attr_accessor :tracer_class, :callbacks, :bump_every
 
       def initialize
-        @tracer_klass = Trifle::Logger::Tracer::Hash
+        @tracer_class = Trifle::Logger::Tracer::Hash
         @callbacks = { liftoff: [], bump: [], wrapup: [] }
         @bump_every = 15.seconds
       end

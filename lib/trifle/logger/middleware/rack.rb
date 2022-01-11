@@ -9,7 +9,8 @@ module Trifle
         end
 
         def call(env)
-          # Trifle::Logger.tracer = Trifle::Logger::Tracer::Hash.new
+          # TODO: set up key
+          # Trifle::Logger.tracer = Trifle::Logger.default.tracer_class.new
           @status, @headers, @response = @app.call(env)
         rescue => e # rubocop:disable Style/RescueStandardError
           Trifle::Logger.tracer&.trace("Exception: #{e}", state: :error)

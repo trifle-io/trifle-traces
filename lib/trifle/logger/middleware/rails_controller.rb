@@ -17,7 +17,7 @@ module Trifle
 
         module InstanceMethods
           def with_trifle_logger
-            Trifle::Logger.tracer = Trifle::Logger::Tracer::Hash.new(
+            Trifle::Logger.tracer = Trifle::Logger.default.tracer_class.new(
               key: trace_key, meta: trace_meta
             )
             yield

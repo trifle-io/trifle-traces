@@ -18,7 +18,7 @@ module Trifle
         def tracer_for(job:)
           return nil unless job['logger_key']
 
-          Trifle::Logger.default.tracer_klass.new(
+          Trifle::Logger.default.tracer_class.new(
             key: job['logger_key'], meta: job['args']
           )
         end
