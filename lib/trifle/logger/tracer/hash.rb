@@ -6,9 +6,10 @@ module Trifle
       class Hash
         attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
 
-        def initialize(key:, meta: nil)
+        def initialize(key:, meta: nil, config: nil)
           @key = key
           @meta = meta
+          @config = config
           @data = []
           @tags = []
           @artifacts = []
@@ -16,8 +17,12 @@ module Trifle
           @ignore = false
           @result_prefix = '=> '
 
-          trace("Trifle::Trace has been initialized for #{key}")
+          trace("Tracer has been initialized for #{key}")
           @reference = liftoff.first
+        end
+
+        def config
+          @config || Trifle::Logger.default
         end
 
         def keys
@@ -99,19 +104,19 @@ module Trifle
 
         def liftoff
           @bumped_at = now
-          Trifle::Logger.default.on_liftoff(self)
+          config.on_liftoff(self)
         end
 
         def bump
-          return unless @bumped_at && @bumped_at <= now - Trifle::Logger.default.bump_every
+          return unless @bumped_at && @bumped_at <= now - config.bump_every
 
           @bumped_at = now
-          Trifle::Logger.default.on_bump(self)
+          config.on_bump(self)
         end
 
         def wrapup
           success! if running?
-          Trifle::Logger.default.on_wrapup(self)
+          config.on_wrapup(self)
         end
       end
     end
