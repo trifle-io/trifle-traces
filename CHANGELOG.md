@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.4.1] - 2022-03-28
+
+- Fix: There is no head in dump_message
+- Fix: Null tracer cleanup
+- Feat: allow to pop all data and artifacts
+
 ## [0.4.0] - 2022-03-28
 
 - Feat: Hash tracer uses type to store text, head, raw, media.

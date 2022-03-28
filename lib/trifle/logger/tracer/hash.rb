@@ -17,12 +17,20 @@ module Trifle
         end
 
         def set_defaults!
-          @data = []
           @tags = []
+          @data = []
           @artifacts = []
           @state = :running
           @ignore = false
           @result_prefix = '=> '
+        end
+
+        def pop_all_data
+          @data.pop(@data.count)
+        end
+
+        def pop_all_artifacts
+          @artifacts.pop(@artifacts.count)
         end
 
         def config
@@ -41,7 +49,6 @@ module Trifle
         ensure
           dump_message(
             message,
-            head: head,
             type: head ? :head : :text,
             state: e ? :error : state
           )

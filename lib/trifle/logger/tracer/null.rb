@@ -4,7 +4,7 @@ module Trifle
   module Logger
     module Tracer
       class Null
-        def log(_message, **_keywords)
+        def trace(_message, **_keywords)
           yield if block_given?
         end
 
