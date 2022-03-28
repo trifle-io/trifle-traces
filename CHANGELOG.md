@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.4.0] - 2022-03-28
+
+- Feat: Hash tracer uses type to store text, head, raw, media.
+
 ## [0.3.1] - 2022-01-11
 
 - Feat: Allow reference to be passed into the Tracer directly

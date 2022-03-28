@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    trifle-logger (0.3.1)
+    trifle-logger (0.4.0)
 
 GEM
   remote: https://rubygems.org/
@@ -56,4 +56,4 @@ DEPENDENCIES
   trifle-logger!
 
 BUNDLED WITH
-   2.2.3
+   2.3.5

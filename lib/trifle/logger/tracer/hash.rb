@@ -36,29 +36,28 @@ module Trifle
 
         def trace(message, state: :success, head: false) # rubocop:disable Metrics/MethodLength
           result = yield if block_given?
-        rescue => e # rubocop:disable Style/RescueStandardError
+        rescue StandardError => e
           raise e
         ensure
           dump_message(
             message,
-            head: head, state: block_given? && result.nil? || e ? :error : state
+            head: head,
+            type: head ? :head : :text,
+            state: e ? :error : state
           )
           dump_result(result) if block_given?
           bump
           result
         end
 
-        def dump_message(message, head:, state:)
-          @data << {
-            at: now, message: message,
-            state: state, head: head, meta: false, media: false
-          }
+        def dump_message(message, type:, state:)
+          @data << { at: now, message: message, state: state, type: type }
         end
 
         def dump_result(result)
           @data << {
             at: now, message: "#{@result_prefix}#{result.inspect}",
-            state: :success, head: false, meta: true, media: false
+            state: :success, type: :raw
           }
         end
 
@@ -73,10 +72,7 @@ module Trifle
         end
 
         def artifact(name, path)
-          @data << {
-            at: now, message: name,
-            state: :success, head: false, meta: false, media: true
-          }
+          @data << { at: now, message: name, state: :success, type: :media, size: File.size(path) }
           @artifacts << path
           bump
           path
