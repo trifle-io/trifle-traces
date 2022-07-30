@@ -11,7 +11,7 @@ Simple logger backed by Redis, Postgres, MongoDB, or whatever.
 
 ## Documentation
 
-You can find guides and documentation at https://trifle.io/docs/logger
+You can find guides and documentation at https://trifle.io/trifle-logger
 
 ## Installation
 
