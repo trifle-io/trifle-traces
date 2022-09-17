@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Logger
-    VERSION = '0.4.1'
+  module Traces
+    VERSION = '1.0.0'
   end
 end

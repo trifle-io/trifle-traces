@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Logger
+  module Traces
     module Middleware
       class Rack
         def initialize(app)
@@ -10,14 +10,14 @@ module Trifle
 
         def call(env)
           # TODO: set up key
-          # Trifle::Logger.tracer = Trifle::Logger.default.tracer_class.new
+          # Trifle::Traces.tracer = Trifle::Traces.default.tracer_class.new
           @status, @headers, @response = @app.call(env)
         rescue => e # rubocop:disable Style/RescueStandardError
-          Trifle::Logger.tracer&.trace("Exception: #{e}", state: :error)
-          Trifle::Logger.tracer&.fail!
+          Trifle::Traces.tracer&.trace("Exception: #{e}", state: :error)
+          Trifle::Traces.tracer&.fail!
           raise e
         ensure
-          Trifle::Logger.tracer&.wrapup
+          Trifle::Traces.tracer&.wrapup
           [@status, @headers, @response]
         end
       end

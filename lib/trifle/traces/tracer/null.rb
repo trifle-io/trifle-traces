@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Logger
+  module Traces
     module Tracer
       class Null
         def trace(_message, **_keywords)

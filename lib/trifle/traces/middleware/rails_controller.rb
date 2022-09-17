@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Logger
+  module Traces
     module Middleware
       module RailsController
         def self.included(base)
@@ -10,23 +10,23 @@ module Trifle
         end
 
         module ClassMethods
-          def with_trifle_logger(options = {})
-            around_action :with_trifle_logger, options
+          def with_trifle_traces(options = {})
+            around_action :with_trifle_traces, options
           end
         end
 
         module InstanceMethods
-          def with_trifle_logger
-            Trifle::Logger.tracer = Trifle::Logger.default.tracer_class.new(
+          def with_trifle_traces
+            Trifle::Traces.tracer = Trifle::Traces.default.tracer_class.new(
               key: trace_key, meta: trace_meta
             )
             yield
           rescue => e # rubocop:disable Style/RescueStandardError
-            Trifle::Logger.tracer.trace("Exception: #{e}", state: :error)
-            Trifle::Logger.tracer.fail!
+            Trifle::Traces.tracer.trace("Exception: #{e}", state: :error)
+            Trifle::Traces.tracer.fail!
             raise e
           ensure
-            Trifle::Logger.tracer.wrapup
+            Trifle::Traces.tracer.wrapup
           end
 
           def trace_key

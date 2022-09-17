@@ -1,21 +1,21 @@
-require_relative 'lib/trifle/logger/version'
+require_relative 'lib/trifle/traces/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'trifle-logger'
-  spec.version       = Trifle::Logger::VERSION
+  spec.name          = 'trifle-traces'
+  spec.version       = Trifle::Traces::VERSION
   spec.authors       = ['Jozef Vaclavik']
   spec.email         = ['jozef@hey.com']
 
-  spec.summary       = 'Simple logger backed by Hash'
-  spec.description   = 'Trifle::Logger is a way too simple timeline logger '\
+  spec.summary       = 'Simple tracing backed by Hash'
+  spec.description   = 'Trifle::Traces is a way too simple timeline tracer '\
                        'that helps you track custom outputs.'
   spec.homepage      = 'https://trifle.io'
   spec.licenses      = ['MIT']
   spec.required_ruby_version = Gem::Requirement.new('>= 2.6')
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://github.com/trifle-io/trifle-logger'
-  spec.metadata['changelog_uri'] = 'https://trifle.io/trifle-logger/changelog'
+  spec.metadata['source_code_uri'] = 'https://github.com/trifle-io/trifle-traces'
+  spec.metadata['changelog_uri'] = 'https://trifle.io/trifle-traces/changelog'
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.

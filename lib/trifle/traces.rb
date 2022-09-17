@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require 'trifle/logger/configuration'
-require 'trifle/logger/tracer/hash'
-require 'trifle/logger/tracer/null'
-require 'trifle/logger/middleware/rack'
-require 'trifle/logger/middleware/rails_controller'
-require 'trifle/logger/middleware/sidekiq'
-require 'trifle/logger/version'
+require 'trifle/traces/configuration'
+require 'trifle/traces/tracer/hash'
+require 'trifle/traces/tracer/null'
+require 'trifle/traces/middleware/rack'
+require 'trifle/traces/middleware/rails_controller'
+require 'trifle/traces/middleware/sidekiq'
+require 'trifle/traces/version'
 
 module Trifle
-  module Logger
+  module Traces
     class Error < StandardError; end
     # Your code goes here...
 

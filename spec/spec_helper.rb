@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "trifle/logger"
+require "trifle/traces"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

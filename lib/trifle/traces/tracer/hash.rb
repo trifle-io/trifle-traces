@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Logger
+  module Traces
     module Tracer
       class Hash
         attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
@@ -34,7 +34,7 @@ module Trifle
         end
 
         def config
-          @config || Trifle::Logger.default
+          @config || Trifle::Traces.default
         end
 
         def keys

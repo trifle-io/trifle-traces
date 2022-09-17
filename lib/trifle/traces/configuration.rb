@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Logger
+  module Tracer
     class Configuration
       attr_accessor :tracer_class, :callbacks, :bump_every
 
       def initialize
-        @tracer_class = Trifle::Logger::Tracer::Hash
+        @tracer_class = Trifle::Traces::Tracer::Hash
         @callbacks = { liftoff: [], bump: [], wrapup: [] }
         @bump_every = 15.seconds
       end
