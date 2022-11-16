@@ -2,7 +2,7 @@
 
 module Trifle
   module Traces
-    module Tracer
+    module Traces
       class Hash
         attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
 

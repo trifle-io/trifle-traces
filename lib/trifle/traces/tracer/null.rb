@@ -2,7 +2,7 @@
 
 module Trifle
   module Traces
-    module Tracer
+    module Traces
       class Null
         def trace(_message, **_keywords)
           yield if block_given?

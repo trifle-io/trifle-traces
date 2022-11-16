@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Trifle
-  module Tracer
+  module Traces
     class Configuration
       attr_accessor :tracer_class, :callbacks, :bump_every
 
