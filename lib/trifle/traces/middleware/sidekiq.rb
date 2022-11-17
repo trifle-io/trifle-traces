@@ -16,6 +16,7 @@ module Trifle
         end
 
         def tracer_for(job:)
+          puts "Trifle::Traces tracer_for #{job['tracer_key']}"
           return nil unless job['tracer_key']
 
           Trifle::Traces.default.tracer_class.new(
