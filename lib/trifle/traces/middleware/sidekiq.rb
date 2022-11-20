@@ -4,7 +4,7 @@ module Trifle
   module Traces
     module Middleware
       class Sidekiq
-        include ::Sidekiq::ServerMiddleware if const_defined?(::Sidekiq::ServerMiddleware)
+        include ::Sidekiq::ServerMiddleware if const_defined?('::Sidekiq::ServerMiddleware')
 
         def call(_worker, job, _queue)
           Trifle::Traces.tracer = tracer_for(job: job)
