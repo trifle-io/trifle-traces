@@ -10,6 +10,7 @@ module Trifle
           @key = key
           @meta = meta
           @config = config
+          @result_serializer = config.serializer_class.new
           set_defaults!
 
           trace("Tracer has been initialized for #{key}")
@@ -63,7 +64,7 @@ module Trifle
 
         def dump_result(result)
           @data << {
-            at: now, message: "#{@result_prefix}#{result.inspect}",
+            at: now, message: "#{@result_prefix}#{@result_serializer.sanitize(result)}",
             state: :success, type: :raw
           }
         end

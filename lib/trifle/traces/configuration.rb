@@ -3,12 +3,13 @@
 module Trifle
   module Traces
     class Configuration
-      attr_accessor :tracer_class, :callbacks, :bump_every
+      attr_accessor :tracer_class, :callbacks, :bump_every, :serializer_class
 
       def initialize
         @tracer_class = Trifle::Traces::Tracer::Hash
+        @serializer_class = Trifle::Traces::Serializer::Inspect
         @callbacks = { liftoff: [], bump: [], wrapup: [] }
-        @bump_every = 15.seconds
+        @bump_every = 15 # seconds
       end
 
       def on_liftoff(tracer)
