@@ -10,7 +10,6 @@ module Trifle
           @key = key
           @meta = meta
           @config = config
-          @result_serializer = config.serializer_class.new
           set_defaults!
 
           trace("Tracer has been initialized for #{key}")
@@ -36,6 +35,10 @@ module Trifle
 
         def config
           @config || Trifle::Traces.default
+        end
+
+        def result_serializer
+          @result_serializer ||= config.serializer_class.new
         end
 
         def keys
@@ -70,7 +73,7 @@ module Trifle
         end
 
         def sanitize_result(result)
-          @result_serializer.sanitize(result)
+          result_serializer.sanitize(result)
         rescue StandardError
           Trifle::Traces::Serializer::Inspect.sanitize(result)
         end
