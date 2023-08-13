@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    trifle-traces (1.1.0)
+    trifle-traces (1.1.1)
 
 GEM
   remote: https://rubygems.org/

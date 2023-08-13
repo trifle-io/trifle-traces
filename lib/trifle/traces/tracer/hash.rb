@@ -3,7 +3,7 @@
 module Trifle
   module Traces
     module Tracer
-      class Hash
+      class Hash # rubocop:disable Metrics/ClassLength
         attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
 
         def initialize(key:, reference: nil, meta: nil, config: nil)
@@ -64,9 +64,15 @@ module Trifle
 
         def dump_result(result)
           @data << {
-            at: now, message: "#{@result_prefix}#{@result_serializer.sanitize(result)}",
+            at: now, message: "#{@result_prefix}#{sanitize_result(result)}",
             state: :success, type: :raw
           }
+        end
+
+        def sanitize_result(result)
+          @result_serializer.sanitize(result)
+        rescue StandardError
+          Trifle::Traces::Serializer::Inspect.sanitize(result)
         end
 
         def now
