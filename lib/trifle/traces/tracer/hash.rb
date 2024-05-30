@@ -4,7 +4,7 @@ module Trifle
   module Traces
     module Tracer
       class Hash # rubocop:disable Metrics/ClassLength
-        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference
+        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference, :level
 
         def initialize(key:, reference: nil, meta: nil, config: nil)
           @key = key
@@ -22,7 +22,10 @@ module Trifle
           @artifacts = []
           @state = :running
           @ignore = false
-          @result_prefix = '=> '
+          @result_prefix = "\u21B3 "
+          @block_begin_suffix = " \u21B4"
+          @block_end_suffix = " \u21B5"
+          @level = 0
         end
 
         def pop_all_data
@@ -47,28 +50,31 @@ module Trifle
         end
 
         def trace(message, state: :success, head: false) # rubocop:disable Metrics/MethodLength
-          result = yield if block_given?
+          dump_message("#{message}#{@block_begin_suffix if block_given?}", type: head ? :head : :text, state: state)
+          if block_given?
+            increase
+            result = yield
+          end
         rescue StandardError => e
           raise e
         ensure
-          dump_message(
-            message,
-            type: head ? :head : :text,
-            state: e ? :error : state
-          )
-          dump_result(result) if block_given?
+          if block_given?
+            decrease
+            dump_message("#{message}#{@block_end_suffix}", type: :text, state: e ? :error : state)
+            dump_result(result)
+          end
           bump
           result
         end
 
         def dump_message(message, type:, state:)
-          @data << { at: now, message: message, state: state, type: type }
+          @data << { at: now, message: message, state: state, type: type, level: level }
         end
 
         def dump_result(result)
           @data << {
             at: now, message: "#{@result_prefix}#{sanitize_result(result)}",
-            state: :success, type: :raw
+            state: :success, type: :raw, level: level
           }
         end
 
@@ -76,6 +82,14 @@ module Trifle
           result_serializer.sanitize(result)
         rescue StandardError
           Trifle::Traces::Serializer::Inspect.sanitize(result)
+        end
+
+        def increase
+          @level += 1
+        end
+
+        def decrease
+          @level -= 1
         end
 
         def now
