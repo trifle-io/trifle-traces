@@ -3,97 +3,74 @@
 [![Gem Version](https://badge.fury.io/rb/trifle-traces.svg)](https://rubygems.org/gems/trifle-traces)
 [![Ruby](https://github.com/trifle-io/trifle-traces/workflows/Ruby/badge.svg?branch=main)](https://github.com/trifle-io/trifle-traces)
 
-Simple log tracer that collects messages and values from your code and returns Hash. It saves you from reading through your standard logger to being able to say what happened during execution.
+Structured execution tracing for Ruby. Track timestamped outputs from background jobs, API integrations, and anything else that runs in a black box. Know exactly what happened, when, and in what order.
 
-## Documentation
+Part of the [Trifle](https://trifle.io) ecosystem.
 
-For comprehensive guides, API reference, and examples, visit [trifle.io/trifle-traces](https://trifle.io/trifle-traces)
-
-## Installation
-
-Add this line to your application's Gemfile:
+## Quick Start
 
 ```ruby
 gem 'trifle-traces'
 ```
 
-And then execute:
-
-```bash
-$ bundle install
-```
-
-Or install it yourself as:
-
-```bash
-$ gem install trifle-traces
-```
-
-## Quick Start
-
-### 1. Basic tracing
-
 ```ruby
-require 'trifle/traces'
-
-Trifle::Traces.trace('This is important output')
-now = Trifle::Traces.trace('And it\'s important to know it happened at') do
-  Time.now
-end
+Trifle::Traces.trace('Starting sync')
+result = Trifle::Traces.trace('Fetched 150 records from API') { api.fetch_all }
+Trifle::Traces.trace('Sync complete')
 ```
 
-### 2. Retrieve traces
+Returns a structured timeline:
 
 ```ruby
 Trifle::Traces.data
 #=> [
-#     {at: 2021-01-25 00:00:00 +0100, message: 'This is important output', state: :success, head: false, meta: false},
-#     {at: 2021-01-25 00:00:00 +0100, message: 'And it\'s important to know it happened at', state: :success, head: false, meta: false},
-#     {at: 2021-01-25 00:00:00 +0100, message: '=> 2021-01-25 00:00:00 +0100', state: :success, head: false, meta: true}
+#     {at: 2026-02-16 10:00:00, message: 'Starting sync', state: :success, head: false, meta: false},
+#     {at: 2026-02-16 10:00:01, message: 'Fetched 150 records from API', state: :success, head: false, meta: false},
+#     {at: 2026-02-16 10:00:03, message: 'Sync complete', state: :success, head: false, meta: false}
 #   ]
 ```
 
-### 3. Configure with callbacks
+Ideal for debugging those background-job-that-talks-to-API-and-works-every-time-when-you-run-it-manually-but-never-in-production type of jobs.
+
+### Configure with callbacks
 
 ```ruby
 Trifle::Traces.configure do |config|
-  config.on(:success) { |trace| puts "✅ #{trace.message}" }
-  config.on(:error) { |trace| puts "❌ #{trace.message}" }
+  config.on(:success) { |trace| puts "Success: #{trace.message}" }
+  config.on(:error) { |trace| puts "Error: #{trace.message}" }
 end
 ```
 
 ## Features
 
-- **Simple tracing** - Collect messages and return values from code execution
-- **State management** - Automatic success/error state tracking
-- **Callbacks** - Hook into trace events for custom processing
-- **Middleware integration** - Built-in support for Rack, Rails, and Sidekiq
-- **Thread-safe** - Safe for concurrent execution
-- **Lightweight** - Minimal performance overhead
+- **Simple tracing** — Collect messages and return values from code execution
+- **State management** — Automatic success/error state tracking
+- **Callbacks** — Hook into trace events for custom processing
+- **Middleware integration** — Built-in support for Rack, Rails, and Sidekiq
+- **Thread-safe** — Safe for concurrent execution
+- **Lightweight** — Minimal performance overhead
 
 ## Middleware
 
 Trifle::Traces provides middleware for popular frameworks:
 
-- **Rack** - HTTP request tracing
-- **Rails** - Controller and view tracing
-- **Sidekiq** - Background job tracing
+- **Rack** — HTTP request tracing
+- **Rails** — Controller and view tracing
+- **Sidekiq** — Background job tracing
 
-## Testing
+## Documentation
 
-Tests verify tracing behavior and middleware integration. To run the test suite:
+Full guides and API reference at **[trifle.io/trifle-traces](https://trifle.io/trifle-traces)**
 
-```bash
-$ bundle exec rspec
-```
+## Trifle Ecosystem
 
-Tests are meant to be **simple and isolated**. Every test should be **independent** and able to run in any order. Tests should be **self-contained** and set up their own configuration.
-
-Use **single layer testing** to focus on testing a specific class or module in isolation. Use **appropriate stubbing** for external dependencies when testing middleware components.
-
-**Repeat yourself** in test setup for clarity rather than complex shared setups that can hide dependencies.
-
-Tests verify that traces are properly collected, states are correctly managed, and callbacks are triggered as expected. Middleware tests ensure proper integration with web frameworks and background job processors.
+| Component | What it does |
+|-----------|-------------|
+| **[Trifle App](https://trifle.io/product-app)** | Dashboards, alerts, scheduled reports, AI-powered chat. |
+| **[Trifle::Stats](https://github.com/trifle-io/trifle-stats)** | Time-series metrics for Ruby (Postgres, Redis, MongoDB, MySQL, SQLite). |
+| **[Trifle CLI](https://github.com/trifle-io/trifle-cli)** | Terminal access to metrics. MCP server mode for AI agents. |
+| **[Trifle::Logs](https://github.com/trifle-io/trifle-logs)** | File-based log storage with ripgrep-powered search. |
+| **[Trifle::Docs](https://github.com/trifle-io/trifle-docs)** | Map a folder of Markdown files to documentation URLs. |
 
 ## Contributing
 
