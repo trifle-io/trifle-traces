@@ -43,20 +43,20 @@ end
 
 ## Features
 
-- **Simple tracing** — Collect messages and return values from code execution
-- **State management** — Automatic success/error state tracking
-- **Callbacks** — Hook into trace events for custom processing
-- **Middleware integration** — Built-in support for Rack, Rails, and Sidekiq
-- **Thread-safe** — Safe for concurrent execution
-- **Lightweight** — Minimal performance overhead
+- **Simple tracing.** Collect messages and return values from code execution.
+- **State management.** Automatic success/error state tracking.
+- **Callbacks.** Hook into trace events for custom processing.
+- **Middleware integration.** Built-in support for Rack, Rails, and Sidekiq.
+- **Thread-safe.** Safe for concurrent execution.
+- **Lightweight.** Minimal performance overhead.
 
 ## Middleware
 
 Trifle::Traces provides middleware for popular frameworks:
 
-- **Rack** — HTTP request tracing
-- **Rails** — Controller and view tracing
-- **Sidekiq** — Background job tracing
+- **Rack.** HTTP request tracing.
+- **Rails.** Controller and view tracing.
+- **Sidekiq.** Background job tracing.
 
 ## Documentation
 
@@ -66,7 +66,7 @@ Full guides and API reference at **[docs.trifle.io/trifle-traces](https://docs.t
 
 | Component | What it does |
 |-----------|-------------|
-| **[Trifle App](https://trifle.io/product-app)** | Dashboards, alerts, scheduled reports, AI-powered chat. |
+| **[Trifle App](https://trifle.io/product/app)** | Dashboards, alerts, scheduled reports, AI-powered chat. |
 | **[Trifle::Stats](https://github.com/trifle-io/trifle-stats)** | Time-series metrics for Ruby (Postgres, Redis, MongoDB, MySQL, SQLite). |
 | **[Trifle CLI](https://github.com/trifle-io/trifle-cli)** | Terminal access to metrics. MCP server mode for AI agents. |
 | **[Trifle::Logs](https://github.com/trifle-io/trifle-logs)** | File-based log storage with ripgrep-powered search. |
