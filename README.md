@@ -60,7 +60,7 @@ Trifle::Traces provides middleware for popular frameworks:
 
 ## Documentation
 
-Full guides and API reference at **[trifle.io/trifle-traces](https://trifle.io/trifle-traces)**
+Full guides and API reference at **[docs.trifle.io/trifle-traces](https://docs.trifle.io/trifle-traces)**
 
 ## Trifle Ecosystem
 
