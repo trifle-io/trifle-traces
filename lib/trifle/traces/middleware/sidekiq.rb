@@ -21,7 +21,7 @@ module Trifle
           return nil unless job['tracer_key']
 
           Trifle::Traces.default.tracer_class.new(
-            key: job['tracer_key'], meta: job['args']
+            key: job['tracer_key'], meta: job['args'], mode: job['tracer_mode']
           )
         end
       end

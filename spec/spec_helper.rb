@@ -1,5 +1,8 @@
 require "bundler/setup"
 require "trifle/traces"
+require "tmpdir"
+
+Dir[File.join(__dir__, "support", "**", "*.rb")].sort.each { |f| require f }
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -10,5 +13,10 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.after(:each) do
+    Trifle::Traces.instance_variable_set(:@default, nil)
+    Thread.current[:trifle_tracer] = nil
   end
 end

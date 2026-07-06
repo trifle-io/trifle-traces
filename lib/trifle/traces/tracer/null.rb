@@ -4,6 +4,8 @@ module Trifle
   module Traces
     module Tracer
       class Null
+        def initialize(**_kwargs); end
+
         def trace(_message, **_keywords)
           yield if block_given?
         end

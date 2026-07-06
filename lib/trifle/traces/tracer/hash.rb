@@ -4,16 +4,19 @@ module Trifle
   module Traces
     module Tracer
       class Hash # rubocop:disable Metrics/ClassLength
-        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference, :level
+        attr_accessor :key, :meta, :data, :tags, :artifacts, :state, :ignore, :reference, :level, :mode
 
-        def initialize(key:, reference: nil, meta: nil, config: nil)
+        def initialize(key:, reference: nil, meta: nil, mode: nil, config: nil)
           @key = key
           @meta = meta
           @config = config
+          @mode = (mode || self.config.default_mode).to_sym
+          @reference = reference
           set_defaults!
 
           trace("Tracer has been initialized for #{key}")
-          @reference = reference || liftoff.first
+          liftoff
+          @reference ||= @dispatcher.reference
         end
 
         def set_defaults!
@@ -81,7 +84,7 @@ module Trifle
         def sanitize_result(result)
           result_serializer.sanitize(result)
         rescue StandardError
-          Trifle::Traces::Serializer::Inspect.sanitize(result)
+          Trifle::Traces::Serializer::Inspect.new.sanitize(result)
         end
 
         def increase
@@ -135,6 +138,8 @@ module Trifle
 
         def liftoff
           @bumped_at = now
+          @dispatcher = config.dispatcher_for(self)
+          @dispatcher.liftoff
           config.on_liftoff(self)
         end
 
@@ -142,11 +147,13 @@ module Trifle
           return unless @bumped_at && @bumped_at <= now - config.bump_every
 
           @bumped_at = now
+          @dispatcher.bump
           config.on_bump(self)
         end
 
         def wrapup
           success! if running?
+          @dispatcher.wrapup
           config.on_wrapup(self)
         end
       end

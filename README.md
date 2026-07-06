@@ -14,41 +14,110 @@ gem 'trifle-traces'
 ```
 
 ```ruby
+Trifle::Traces.tracer = Trifle::Traces::Tracer::Hash.new(key: 'jobs/sync')
+
 Trifle::Traces.trace('Starting sync')
-result = Trifle::Traces.trace('Fetched 150 records from API') { api.fetch_all }
+result = Trifle::Traces.trace('Fetching records from API') { api.fetch_all }
 Trifle::Traces.trace('Sync complete')
+
+Trifle::Traces.tracer.wrapup
 ```
 
-Returns a structured timeline:
+Every message becomes a structured timeline entry on the tracer:
 
 ```ruby
-Trifle::Traces.data
+Trifle::Traces.tracer.data
 #=> [
-#     {at: 2026-02-16 10:00:00, message: 'Starting sync', state: :success, head: false, meta: false},
-#     {at: 2026-02-16 10:00:01, message: 'Fetched 150 records from API', state: :success, head: false, meta: false},
-#     {at: 2026-02-16 10:00:03, message: 'Sync complete', state: :success, head: false, meta: false}
+#     {at: 1739700000, message: 'Starting sync', state: :success, type: :text, level: 0},
+#     {at: 1739700001, message: 'Fetching records from API', state: :success, type: :text, level: 0},
+#     {at: 1739700003, message: 'Sync complete', state: :success, type: :text, level: 0}
 #   ]
 ```
 
 Ideal for debugging those background-job-that-talks-to-API-and-works-every-time-when-you-run-it-manually-but-never-in-production type of jobs.
 
-### Configure with callbacks
+## Persistence (v2.0)
+
+Traces persist through two pluggable drivers: an **index driver** (searchable
+trace metadata) and a **data driver** (the payload). Configure both and the
+gem handles the whole lifecycle — no hand-written persistence callbacks.
 
 ```ruby
 Trifle::Traces.configure do |config|
-  config.on(:success) { |trace| puts "Success: #{trace.message}" }
-  config.on(:error) { |trace| puts "Error: #{trace.message}" }
+  config.index_driver = Trifle::Traces::Driver::Index::Mongo.new(
+    mongo_client, collection_name: 'trifle_traces'
+  )
+  config.data_driver = Trifle::Traces::Driver::Data::S3.new(
+    client: s3_client, buckets: %w[traces-a traces-b], gzip: true
+  )
+
+  config.context   = ->(tracer) { { tenant_id: tracer.meta&.first } } # extra index fields
+  config.retention = ->(tracer) { 3 }                                 # days, value or callable
 end
 ```
+
+- **Index drivers:** `Mongo` (production-proven at 100M+ traces/day), `Memory`, `Null`. ClickHouse/OpenSearch/Postgres planned — see `lib/trifle/traces/driver/README.md` to write your own.
+- **Data drivers:** `S3` (any S3-compatible storage, multi-bucket sharding, gzip), `File`, `Memory`, `Null`.
+- **Retention:** carried on every record (`retention` days + `expires_at`). Mongo expires metadata via TTL index; S3 expires payloads via one lifecycle rule per retention class (`Driver::Data::S3.setup!` creates them).
+- Without configured drivers nothing persists — data stays on the tracer for your callbacks, as in 1.x.
+
+### Write modes
+
+Every liftoff/bump/wrapup writes to the index in `:live` mode (default),
+giving you live progress. For fast, line-heavy, high-volume jobs use
+`:deferred` — zero I/O until wrapup, then exactly one index write and one
+payload part per trace:
+
+```ruby
+class Commodity::PollJob
+  include Sidekiq::Job
+  sidekiq_options tracer_key: 'commodity/poll', tracer_mode: :deferred
+end
+```
+
+### Reading traces back
+
+```ruby
+record = Trifle::Traces.find(reference)                    #=> TraceRecord
+result = Trifle::Traces.search(segment: 'jobs/sync', tags: ['tenant:42'],
+                               state: :error, limit: 50, cursor: nil)
+entries = Trifle::Traces.payload(record)                   # all parts, in order
+```
+
+Search is intentionally narrow — key-path segment, tags, state, newest-first
+with cursor pagination. That is what stays fast at hundreds of millions of
+traces.
+
+### Callbacks
+
+Callbacks still fire on `:liftoff`, `:bump` and `:wrapup` — use them for
+side effects like emitting metrics (persistence no longer belongs here):
+
+```ruby
+Trifle::Traces.configure do |config|
+  config.on(:wrapup) do |tracer|
+    tracer.keys.each do |key|
+      Trifle::Stats.track(key: "traces::#{key}", at: Time.now, values: { count: 1 })
+    end
+  end
+end
+```
+
+### Upgrading from 1.x
+
+- The return value of `:liftoff` callbacks no longer becomes `tracer.reference` — the index driver generates references. Move persistence out of callbacks into drivers (or implement a custom driver; see `lib/trifle/traces/driver/README.md`).
+- Persistence errors are no longer silent: liftoff/wrapup failures raise, bump failures re-queue the data and retry on the next flush. Override `config.error_handler` to customize.
 
 ## Features
 
 - **Simple tracing.** Collect messages and return values from code execution.
+- **Driver-based persistence.** Mongo + S3/File out of the box; contracts for custom backends.
+- **Deferred mode.** One write per trace for high-volume jobs (100M/day proven).
 - **State management.** Automatic success/error state tracking.
 - **Callbacks.** Hook into trace events for custom processing.
 - **Middleware integration.** Built-in support for Rack, Rails, and Sidekiq.
 - **Thread-safe.** Safe for concurrent execution.
-- **Lightweight.** Minimal performance overhead.
+- **Zero runtime dependencies.** Database/storage clients are injected.
 
 ## Middleware
 
@@ -56,7 +125,7 @@ Trifle::Traces provides middleware for popular frameworks:
 
 - **Rack.** HTTP request tracing.
 - **Rails.** Controller and view tracing.
-- **Sidekiq.** Background job tracing.
+- **Sidekiq.** Background job tracing (`sidekiq_options tracer_key:, tracer_mode:`).
 
 ## Documentation
 

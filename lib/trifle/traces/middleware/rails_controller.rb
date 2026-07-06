@@ -18,7 +18,7 @@ module Trifle
         module InstanceMethods
           def with_trifle_traces
             Trifle::Traces.tracer = Trifle::Traces.default.tracer_class.new(
-              key: trace_key, meta: trace_meta
+              key: trace_key, meta: trace_meta, mode: trace_mode
             )
             yield
           rescue => e # rubocop:disable Style/RescueStandardError
@@ -35,6 +35,10 @@ module Trifle
 
           def trace_meta
             [params[:id]].compact
+          end
+
+          def trace_mode
+            nil # defaults to config.default_mode; override per controller
           end
         end
       end

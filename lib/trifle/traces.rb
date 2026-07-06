@@ -1,6 +1,19 @@
 # frozen_string_literal: true
 
+require 'trifle/traces/ref'
+require 'trifle/traces/trace_record'
 require 'trifle/traces/configuration'
+require 'trifle/traces/dispatcher'
+require 'trifle/traces/driver/index/mongo'
+require 'trifle/traces/driver/index/memory'
+require 'trifle/traces/driver/index/null'
+require 'trifle/traces/driver/data/s3'
+require 'trifle/traces/driver/data/file'
+require 'trifle/traces/driver/data/memory'
+require 'trifle/traces/driver/data/null'
+require 'trifle/traces/operations/trace/find'
+require 'trifle/traces/operations/trace/search'
+require 'trifle/traces/operations/trace/payload'
 require 'trifle/traces/tracer/hash'
 require 'trifle/traces/tracer/null'
 require 'trifle/traces/serializer/inspect'
@@ -14,7 +27,6 @@ require 'trifle/traces/version'
 module Trifle
   module Traces
     class Error < StandardError; end
-    # Your code goes here...
 
     def self.default
       @default ||= Configuration.new
@@ -70,6 +82,29 @@ module Trifle
       return unless tracer
 
       tracer.ignore!
+    end
+
+    def self.find(reference, config: nil)
+      Trifle::Traces::Operations::Trace::Find.new(
+        reference: reference, config: config
+      ).perform
+    end
+
+    def self.search(segment: nil, tags: nil, state: nil, limit: 20, cursor: nil, config: nil) # rubocop:disable Metrics/ParameterLists
+      Trifle::Traces::Operations::Trace::Search.new(
+        segment: segment, tags: tags, state: state,
+        limit: limit, cursor: cursor, config: config
+      ).perform
+    end
+
+    def self.payload(record, config: nil)
+      Trifle::Traces::Operations::Trace::Payload.new(
+        record: record, config: config
+      ).perform
+    end
+
+    def self.read_artifact(record, name, config: nil)
+      (config || default).data_driver.read_artifact(record, name: name)
     end
   end
 end
