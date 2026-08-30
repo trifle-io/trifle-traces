@@ -4,6 +4,7 @@ require 'trifle/traces/ref'
 require 'trifle/traces/trace_record'
 require 'trifle/traces/configuration'
 require 'trifle/traces/dispatcher'
+require 'trifle/traces/driver/index/query'
 require 'trifle/traces/driver/index/mongo'
 require 'trifle/traces/driver/index/memory'
 require 'trifle/traces/driver/index/null'
@@ -90,12 +91,16 @@ module Trifle
       ).perform
     end
 
-    def self.search(segment: nil, tags: nil, state: nil, limit: 20, cursor: nil, config: nil) # rubocop:disable Metrics/ParameterLists
+    # rubocop:disable Metrics/ParameterLists
+    def self.search(segment: nil, tags: nil, state: nil, from: nil, to: nil, duration_min: nil,
+                    limit: 20, cursor: nil, config: nil)
       Trifle::Traces::Operations::Trace::Search.new(
         segment: segment, tags: tags, state: state,
+        from: from, to: to, duration_min: duration_min,
         limit: limit, cursor: cursor, config: config
       ).perform
     end
+    # rubocop:enable Metrics/ParameterLists
 
     def self.payload(record, config: nil)
       Trifle::Traces::Operations::Trace::Payload.new(

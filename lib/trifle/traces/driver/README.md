@@ -25,19 +25,22 @@ create(record)      # Insert. In :deferred mode this is the only index
                     #    write and record.state is already final.
 update(record)      # OPTIONAL (declare via capabilities). Persist the
                     #    mutable fields: state, tags, context, length,
-                    #    parts, last_at, expires_at.
+                    #    parts, duration, counters, last_at, expires_at.
 delete(reference)   # OPTIONAL. Used by ignore! in :live mode.
 find(reference)     # -> TraceRecord | nil
-search(segment: nil, tags: nil, state: nil, limit: 20, cursor: nil)
+search(segment: nil, tags: nil, state: nil, from: nil, to: nil,
+       duration_min: nil, limit: 20, cursor: nil)
                     # -> { traces: [TraceRecord], cursor: String | nil }
 capabilities        # -> { update:, delete:, search:, ttl: }
 self.setup!(...)    # Create indexes / DDL. Run once.
 ```
 
-The search contract is deliberately narrow — segment prefix match
-(ANY over a small array), tags ANY-match, exact state, newest-first
-only, opaque cursor, no counts. Do not widen it per driver; wide ad-hoc
-search multiplies write or query cost at high volume.
+The search contract is deliberately narrow — exact match against materialized
+segment prefixes, explicit `{ any: [], all: [] }` tag groups, exact state,
+inclusive `from`, exclusive `to`, inclusive `duration_min`, newest-first only,
+opaque cursor, no counts. Drivers sort by `first_at DESC, reference DESC`; the
+unique reference is the deterministic tie-breaker. Do not widen the contract
+per driver; wide ad-hoc search multiplies write or query cost at high volume.
 
 `capabilities[:ttl]` describes retention handling: `:native` (backend
 expires rows itself, e.g. Mongo TTL index), `:cleanup` (driver provides

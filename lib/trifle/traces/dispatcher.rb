@@ -16,6 +16,7 @@ module Trifle
       def initialize(tracer:, config:)
         @tracer = tracer
         @config = config
+        @started_at = monotonic_now
         @pending = []
         @pending_artifacts = []
         @failed_phase = nil
@@ -96,6 +97,7 @@ module Trifle
           key: tracer.key, state: tracer.state,
           tags: tracer.tags.dup, meta: tracer.meta,
           context: config.context_for(tracer),
+          duration: 0, counters: TraceRecord.empty_counters,
           length: 0, parts: 0, first_at: now, last_at: now,
           retention: retention, expires_at: now + (retention * 86_400),
           bucket_id: data_driver.generate_bucket_id
@@ -117,6 +119,7 @@ module Trifle
         upload_artifacts
         data_driver.write_part(record, part: part, entries: @pending)
         record.length += @pending.count
+        accumulate_counters(@pending)
         record.parts = part
         sync_record
         @pending = []
@@ -149,6 +152,41 @@ module Trifle
         record.state = tracer.state
         record.tags = tracer.tags.uniq.compact.sort
         record.last_at = Time.now
+        update_duration
+      end
+
+      def accumulate_counters(entries)
+        counters = duplicate_counters
+        entries.each { |entry| accumulate_entry(counters, entry) }
+        record.counters = counters
+      end
+
+      def duplicate_counters
+        {
+          states: record.counters[:states].dup,
+          types: record.counters[:types].dup,
+          max_level: record.counters[:max_level]
+        }
+      end
+
+      def accumulate_entry(counters, entry)
+        increment_counter(counters[:states], entry[:state])
+        increment_counter(counters[:types], entry[:type])
+        counters[:max_level] = [counters[:max_level], entry.fetch(:level, 0).to_i].max
+      end
+
+      def increment_counter(counters, key)
+        key = key&.to_sym
+        counters[key] += 1 if counters.key?(key)
+      end
+
+      def update_duration
+        elapsed_ms = ((monotonic_now - @started_at) * 1000).round
+        record.duration = [record.duration, elapsed_ms].max
+      end
+
+      def monotonic_now
+        Process.clock_gettime(Process::CLOCK_MONOTONIC)
       end
 
       def finalize_record

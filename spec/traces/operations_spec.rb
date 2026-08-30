@@ -23,14 +23,29 @@ RSpec.describe 'Trifle::Traces read API' do
 
       expect(record.key).to eq('jobs/import/products')
       expect(record.state).to eq(:success)
+      expect(record.duration).to be_a(Integer)
+      expect(record.counters[:states].values.sum).to eq(record.length)
     end
   end
 
   describe '.search' do
     it 'searches through the index driver' do
-      result = Trifle::Traces.search(segment: 'jobs/import', config: config)
+      result = Trifle::Traces.search(
+        segment: 'jobs/import', tags: { all: %w[tenant:1] }, duration_min: 0,
+        from: Time.at(0), to: Time.now + 1, config: config
+      )
 
       expect(result[:traces].map(&:reference)).to eq([@reference])
+    end
+
+    it 'rejects legacy scalar and array tag shorthand' do
+      expect do
+        Trifle::Traces.search(tags: 'tenant:1', config: config)
+      end.to raise_error(ArgumentError)
+
+      expect do
+        Trifle::Traces.search(tags: %w[tenant:1], config: config)
+      end.to raise_error(ArgumentError)
     end
   end
 

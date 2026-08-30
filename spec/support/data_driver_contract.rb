@@ -9,6 +9,7 @@ RSpec.shared_examples 'a data driver' do
     Trifle::Traces::TraceRecord.new(
       reference: Trifle::Traces::Ref.generate, key: 'jobs/import/products',
       state: :running, tags: [], meta: nil, context: {},
+      duration: 0, counters: Trifle::Traces::TraceRecord.empty_counters,
       length: 0, parts: 0, first_at: Time.now, last_at: Time.now,
       retention: 3, expires_at: Time.now + (3 * 86_400),
       bucket_id: driver.generate_bucket_id

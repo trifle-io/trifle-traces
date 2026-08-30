@@ -26,6 +26,12 @@ RSpec.describe Trifle::Traces::Dispatcher do
       expect(record.parts).to eq(1)
       expect(record.length).to eq(1)
       expect(record.context).to eq('tenant' => 42)
+      expect(record.duration).to be_a(Integer)
+      expect(record.counters).to eq(
+        states: { success: 1, warning: 0, error: 0, debug: 0 },
+        types: { text: 1, head: 0, raw: 0, media: 0 },
+        max_level: 0
+      )
       expect(record.retention).to eq(3)
       expect(record.expires_at.to_i).to eq(record.first_at.to_i + (3 * 86_400))
       expect(data_driver.read_part(record, part: 1).first[:message]).to include('initialized')
@@ -52,6 +58,20 @@ RSpec.describe Trifle::Traces::Dispatcher do
       expect(record.state).to eq(:warning)
       expect(record.tags).to eq(['invoice:1'])
       expect(data_driver.read(record).count).to eq(record.length)
+    end
+
+    it 'updates duration from the monotonic clock during bumps and wrapup' do
+      tracer = tracer_for
+      dispatcher = tracer.instance_variable_get(:@dispatcher)
+      started_at = dispatcher.instance_variable_get(:@started_at)
+
+      allow(dispatcher).to receive(:monotonic_now).and_return(started_at + 0.125)
+      tracer.trace('timed step')
+      expect(index_driver.find(tracer.reference).duration).to eq(125)
+
+      allow(dispatcher).to receive(:monotonic_now).and_return(started_at + 0.5)
+      tracer.wrapup
+      expect(index_driver.find(tracer.reference).duration).to eq(500)
     end
 
     it 'deletes index and data when ignored' do
@@ -96,6 +116,37 @@ RSpec.describe Trifle::Traces::Dispatcher do
       expect(data_driver.read(record).count).to eq(3)
     end
 
+    it 'records final duration from the monotonic clock' do
+      tracer = tracer_for(mode: :deferred)
+      dispatcher = tracer.instance_variable_get(:@dispatcher)
+      started_at = dispatcher.instance_variable_get(:@started_at)
+      allow(dispatcher).to receive(:monotonic_now).and_return(started_at + 1.234)
+
+      tracer.wrapup
+
+      expect(index_driver.find(tracer.reference).duration).to eq(1_234)
+    end
+
+    it 'aggregates entry states, types and maximum nesting level' do
+      tracer = tracer_for(mode: :deferred)
+      tracer.trace('warning head', state: :warning, head: true)
+      tracer.trace('outer') do
+        tracer.trace('nested debug', state: :debug)
+        'result'
+      end
+      tracer.trace('failure', state: :error)
+      tracer.wrapup
+
+      record = index_driver.find(tracer.reference)
+      expect(record.counters).to eq(
+        states: { success: 4, warning: 1, error: 1, debug: 1 },
+        types: { text: 5, head: 1, raw: 1, media: 0 },
+        max_level: 1
+      )
+      expect(record.counters[:states].values.sum).to eq(record.length)
+      expect(record.counters[:types].values.sum).to eq(record.length)
+    end
+
     it 'writes nothing when ignored' do
       tracer = tracer_for(mode: :deferred)
       tracer.trace('step one')
@@ -117,6 +168,7 @@ RSpec.describe Trifle::Traces::Dispatcher do
       record = index_driver.find(tracer.reference)
       offloaded = data_driver.read(record).find { |e| e[:size] == 100 }
       expect(offloaded[:type]).to eq(:media)
+      expect(record.counters[:types]).to include(text: 0, media: 2)
       expect(data_driver.read_artifact(record, name: offloaded[:message])).to eq('x' * 100)
     end
   end
@@ -151,12 +203,15 @@ RSpec.describe Trifle::Traces::Dispatcher do
 
       tracer = tracer_for
       tracer.trace('lost?')
+      expect(index_driver.find(tracer.reference).counters[:states][:success]).to eq(1)
       tracer.trace('recovered')
 
       record = index_driver.find(tracer.reference)
       messages = data_driver.read(record).map { |e| e[:message] }
       expect(messages).to include('lost?', 'recovered')
       expect(record.length).to eq(3)
+      expect(record.counters[:states][:success]).to eq(3)
+      expect(record.counters[:states].values.sum).to eq(record.length)
       expect(warnings.map(&:first)).to eq([:bump])
     end
 

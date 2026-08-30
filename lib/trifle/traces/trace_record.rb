@@ -2,6 +2,9 @@
 
 module Trifle
   module Traces
+    COUNTER_STATES = %i[success warning error debug].freeze
+    COUNTER_TYPES = %i[text head raw media].freeze
+
     # Canonical value object passed between the tracer, the dispatcher
     # and both drivers, and returned by find/search.
     # rubocop:disable Lint/StructNewOverride
@@ -12,6 +15,8 @@ module Trifle
       :tags,       # Array<String>
       :meta,       # raw tracer meta
       :context,    # Hash of user-extracted index fields (flat scalars)
+      :duration,   # Integer milliseconds elapsed since dispatcher creation
+      :counters,   # Hash of entry state/type totals and maximum nesting level
       :length,     # Integer, total entries flushed so far
       :parts,      # Integer, number of data parts written
       :first_at,   # Time
@@ -24,6 +29,14 @@ module Trifle
       def segments
         chunks = key.to_s.split('/')
         chunks.count.times.map { |i| chunks[0..i].join('/') }
+      end
+
+      def self.empty_counters
+        {
+          states: COUNTER_STATES.to_h { |state| [state, 0] },
+          types: COUNTER_TYPES.to_h { |type| [type, 0] },
+          max_level: 0
+        }
       end
     end
     # rubocop:enable Lint/StructNewOverride

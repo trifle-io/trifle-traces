@@ -24,12 +24,15 @@ RSpec.describe Trifle::Traces::Driver::Index::Mongo do
     end
 
     describe '.setup!' do
-      it 'creates the segments, tags and TTL indexes' do
-        names = client[collection_name].indexes.map { |i| i['key'].keys }
+      it 'creates the search and TTL indexes' do
+        keys = client[collection_name].indexes.map { |index| index['key'].to_h }
 
-        expect(names).to include(%w[segments state _id])
-        expect(names).to include(%w[tags state _id])
-        expect(names).to include(%w[expires_at])
+        expect(keys).to include('segments' => 1, 'first_at' => -1, '_id' => -1)
+        expect(keys).to include('tags' => 1, 'first_at' => -1, '_id' => -1)
+        expect(keys).to include('state' => 1, 'first_at' => -1, '_id' => -1)
+        expect(keys).to include('first_at' => -1, '_id' => -1)
+        expect(keys).to include('duration' => 1, 'first_at' => -1, '_id' => -1)
+        expect(keys).to include('expires_at' => 1)
       end
     end
   else

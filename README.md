@@ -78,14 +78,29 @@ end
 ### Reading traces back
 
 ```ruby
-record = Trifle::Traces.find(reference)                    #=> TraceRecord
-result = Trifle::Traces.search(segment: 'jobs/sync', tags: ['tenant:42'],
-                               state: :error, limit: 50, cursor: nil)
-entries = Trifle::Traces.payload(record)                   # all parts, in order
+record = Trifle::Traces.find(reference) #=> TraceRecord with duration and counters
+result = Trifle::Traces.search(
+  segment: 'jobs/sync',
+  tags: { any: ['tenant:42', 'tenant:43'], all: ['failed'] },
+  state: :error,
+  from: Time.utc(2026, 8, 30),
+  to: Time.utc(2026, 8, 31),
+  duration_min: 5_000,
+  limit: 50,
+  cursor: nil
+)
+entries = Trifle::Traces.payload(record) # all parts, in order
 ```
 
-Search is intentionally narrow — key-path segment, tags, state, newest-first
-with cursor pagination. That is what stays fast at hundreds of millions of
+`duration` is elapsed monotonic time in integer milliseconds. `counters`
+contains totals by entry state and type plus `max_level`. Search selects traces
+that started in the half-open interval `first_at >= from` and `first_at < to`;
+`duration_min` is inclusive. Tag groups mean `(any[0] OR any[1] ...) AND
+all[0] AND all[1] ...`; empty groups are ignored.
+
+Search is intentionally narrow — materialized key-path segment, explicit tag
+groups, exact state, start-time range and minimum duration, newest-first with
+opaque cursor pagination. That is what stays fast at hundreds of millions of
 traces.
 
 ### Callbacks
