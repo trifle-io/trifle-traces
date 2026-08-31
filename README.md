@@ -7,6 +7,9 @@ Structured execution tracing for Ruby. Track timestamped outputs from background
 
 Part of the [Trifle](https://trifle.io) ecosystem.
 
+Also available as [Trifle.Traces for Elixir](https://github.com/trifle-io/trifle_traces),
+with the same 2.0 persistence format.
+
 ## Quick Start
 
 ```ruby
@@ -56,10 +59,28 @@ Trifle::Traces.configure do |config|
 end
 ```
 
-- **Index drivers:** `Mongo` (production-proven at 100M+ traces/day), `Memory`, `Null`. ClickHouse/OpenSearch/Postgres planned — see `lib/trifle/traces/driver/README.md` to write your own.
+- **Index drivers:** `Postgres` (shared schema with the Elixir implementation), `Mongo` (production-proven at 100M+ traces/day), `Memory`, `Null`. ClickHouse/OpenSearch are planned — see `lib/trifle/traces/driver/README.md` to write your own.
 - **Data drivers:** `S3` (any S3-compatible storage, multi-bucket sharding, gzip), `File`, `Memory`, `Null`.
-- **Retention:** carried on every record (`retention` days + `expires_at`). Mongo expires metadata via TTL index; S3 expires payloads via one lifecycle rule per retention class (`Driver::Data::S3.setup!` creates them).
+- **Retention:** carried on every record (`retention` days + `expires_at`). Mongo expires metadata via TTL index; Postgres provides `cleanup!` for a scheduled job; S3 expires payloads via one lifecycle rule per retention class (`Driver::Data::S3.setup!` creates them).
 - Without configured drivers nothing persists — data stays on the tracer for your callbacks, as in 1.x.
+
+Postgres keeps the client injectable, so the gem still has no runtime
+dependencies. Add `pg` to the host application, provision the table once, and
+schedule cleanup for expired metadata:
+
+```ruby
+require 'pg'
+
+client = PG.connect(ENV.fetch('DATABASE_URL'))
+Trifle::Traces::Driver::Index::Postgres.setup!(client)
+
+Trifle::Traces.configure do |config|
+  config.index_driver = Trifle::Traces::Driver::Index::Postgres.new(client)
+end
+
+# Run periodically from your scheduler:
+Trifle::Traces.default.index_driver.cleanup!
+```
 
 ### Write modes
 
@@ -126,7 +147,7 @@ end
 ## Features
 
 - **Simple tracing.** Collect messages and return values from code execution.
-- **Driver-based persistence.** Mongo + S3/File out of the box; contracts for custom backends.
+- **Driver-based persistence.** Postgres or Mongo metadata + S3/File payloads out of the box; contracts for custom backends.
 - **Deferred mode.** One write per trace for high-volume jobs (100M/day proven).
 - **State management.** Automatic success/error state tracking.
 - **Callbacks.** Hook into trace events for custom processing.
@@ -152,6 +173,7 @@ Full guides and API reference at **[docs.trifle.io/trifle-traces](https://docs.t
 |-----------|-------------|
 | **[Trifle App](https://trifle.io/product/app)** | Dashboards, alerts, scheduled reports, AI-powered chat. |
 | **[Trifle::Stats](https://github.com/trifle-io/trifle-stats)** | Time-series metrics for Ruby (Postgres, Redis, MongoDB, MySQL, SQLite). |
+| **[Trifle.Traces (Elixir)](https://github.com/trifle-io/trifle_traces)** | Elixir implementation with compatible Postgres, Mongo, and File/S3 persistence. |
 | **[Trifle CLI](https://github.com/trifle-io/trifle-cli)** | Terminal access to metrics. MCP server mode for AI agents. |
 | **[Trifle::Logs](https://github.com/trifle-io/trifle-logs)** | File-based log storage with ripgrep-powered search. |
 | **[Trifle::Docs](https://github.com/trifle-io/trifle-docs)** | Map a folder of Markdown files to documentation URLs. |

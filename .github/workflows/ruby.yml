@@ -16,12 +16,28 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/trifle_traces_test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trifle_traces_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d trifle_traces_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     strategy:
       matrix:
         ruby-version: ["3.0"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Ruby
         # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
         # change this to (see https://github.com/ruby/setup-ruby#versioning):

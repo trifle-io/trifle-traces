@@ -1,7 +1,7 @@
 # Trifle::Traces driver contracts
 
 Trifle::Traces persists traces through two pluggable, duck-typed drivers.
-Clients (mongo, aws-sdk-s3, ...) are always injected — the gem has zero
+Clients (pg, mongo, aws-sdk-s3, ...) are always injected — the gem has zero
 runtime dependencies. To support a new backend, implement the contract
 below and run the shared contract specs against it
 (`spec/support/index_driver_contract.rb`, `spec/support/data_driver_contract.rb`).
@@ -44,9 +44,10 @@ per driver; wide ad-hoc search multiplies write or query cost at high volume.
 
 `capabilities[:ttl]` describes retention handling: `:native` (backend
 expires rows itself, e.g. Mongo TTL index), `:cleanup` (driver provides
-a `cleanup!` method to run from cron), `:none`. Retention arrives as
-data on the record (`retention` days, `expires_at`); the driver maps it
-to TTL columns, partition drops or index rollover as fits the backend.
+a `cleanup!` method to run from cron), `:none`. The built-in Postgres driver
+uses `:cleanup`; run `cleanup!` periodically to delete expired rows. Retention
+arrives as data on the record (`retention` days, `expires_at`); the driver maps
+it to TTL columns, partition drops or index rollover as fits the backend.
 
 ## Data driver
 

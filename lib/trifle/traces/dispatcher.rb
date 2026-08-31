@@ -127,8 +127,8 @@ module Trifle
 
       def upload_artifacts
         until @pending_artifacts.empty?
-          path = @pending_artifacts.first
-          data_driver.write_artifact(record, name: File.basename(path), path: path)
+          artifact = @pending_artifacts.first
+          data_driver.write_artifact(record, name: artifact[:name], path: artifact[:path])
           @pending_artifacts.shift
         end
       end

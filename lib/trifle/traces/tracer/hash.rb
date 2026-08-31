@@ -23,6 +23,7 @@ module Trifle
           @tags = []
           @data = []
           @artifacts = []
+          @artifact_queue = []
           @state = :running
           @ignore = false
           @result_prefix = "\u21B3 "
@@ -36,7 +37,7 @@ module Trifle
         end
 
         def pop_all_artifacts
-          @artifacts.pop(@artifacts.count)
+          @artifact_queue.pop(@artifact_queue.count)
         end
 
         def config
@@ -108,6 +109,7 @@ module Trifle
         def artifact(name, path)
           @data << { at: now, message: name, state: :success, type: :media, size: File.size(path) }
           @artifacts << path
+          @artifact_queue << { name: name, path: path }
           bump
           path
         end

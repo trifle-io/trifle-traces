@@ -183,7 +183,7 @@ RSpec.describe Trifle::Traces::Dispatcher do
         tracer.wrapup
 
         record = index_driver.find(tracer.reference)
-        expect(data_driver.read_artifact(record, name: 'report.csv')).to eq('a,b')
+        expect(data_driver.read_artifact(record, name: 'report')).to eq('a,b')
       end
     end
   end
