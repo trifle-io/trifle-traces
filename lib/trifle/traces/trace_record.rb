@@ -23,7 +23,7 @@ module Trifle
       :last_at,    # Time
       :retention,  # Integer days
       :expires_at, # Time, first_at + retention days
-      :bucket_id,  # Integer, data driver shard chosen at liftoff
+      :bucket_name, # String or nil, payload bucket chosen at liftoff
       keyword_init: true
     ) do
       def segments

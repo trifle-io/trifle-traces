@@ -100,7 +100,7 @@ module Trifle
           duration: 0, counters: TraceRecord.empty_counters,
           length: 0, parts: 0, first_at: now, last_at: now,
           retention: retention, expires_at: now + (retention * 86_400),
-          bucket_id: data_driver.generate_bucket_id
+          bucket_name: data_driver.generate_bucket_name
         )
       end
 

@@ -17,7 +17,7 @@ RSpec.shared_examples 'an index driver' do
         max_level: 0
       },
       length: 1, parts: 1, first_at: at, last_at: at,
-      retention: 3, expires_at: at + (3 * 86_400), bucket_id: 0
+      retention: 3, expires_at: at + (3 * 86_400), bucket_name: 'traces-a'
     )
   end
 
@@ -53,7 +53,7 @@ RSpec.shared_examples 'an index driver' do
       expect(found.length).to eq(1)
       expect(found.parts).to eq(1)
       expect(found.retention).to eq(3)
-      expect(found.bucket_id).to eq(0)
+      expect(found.bucket_name).to eq('traces-a')
       expect(found.first_at.to_i).to eq(record.first_at.to_i)
       expect(found.expires_at.to_i).to eq(record.expires_at.to_i)
     end
@@ -89,6 +89,7 @@ RSpec.shared_examples 'an index driver' do
       expect(found.counters).to eq(record.counters)
       expect(found.length).to eq(9)
       expect(found.parts).to eq(3)
+      expect(found.bucket_name).to eq('traces-a')
     end
   end
 

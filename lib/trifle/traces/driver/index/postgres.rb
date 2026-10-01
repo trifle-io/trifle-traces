@@ -39,7 +39,7 @@ module Trifle
                   last_at TIMESTAMPTZ NOT NULL,
                   retention INTEGER NOT NULL,
                   expires_at TIMESTAMPTZ NOT NULL,
-                  bucket_id INTEGER NOT NULL DEFAULT 0
+                  bucket_name TEXT
                 )
               SQL
               "CREATE INDEX IF NOT EXISTS #{table_name}_segments_gin " \
@@ -88,7 +88,7 @@ module Trifle
                 INSERT INTO #{table_name} (
                   reference, key, segments, state, tags, meta, context,
                   duration, counters, length, parts, first_at, last_at,
-                  retention, expires_at, bucket_id
+                  retention, expires_at, bucket_name
                 ) VALUES (
                   $1, $2, $3::jsonb, $4, $5::jsonb, $6::jsonb, $7::jsonb,
                   $8, $9::jsonb, $10, $11, $12, $13, $14, $15, $16
@@ -174,7 +174,7 @@ module Trifle
               self.class.timestamp(record.last_at),
               record.retention,
               self.class.timestamp(record.expires_at),
-              record.bucket_id
+              record.bucket_name
             ]
           end
 
@@ -250,7 +250,7 @@ module Trifle
               last_at: parse_time(row['last_at']),
               retention: row['retention'].to_i,
               expires_at: parse_time(row['expires_at']),
-              bucket_id: row['bucket_id'].to_i
+              bucket_name: row['bucket_name']
             )
           end
 

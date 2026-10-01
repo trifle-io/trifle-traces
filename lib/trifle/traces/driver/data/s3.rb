@@ -13,7 +13,7 @@ module Trifle
         # Objects live under "<retention>/<prefix>/<key>/<reference>/",
         # so a single bucket lifecycle rule per retention class expires
         # payloads. Multiple buckets spread writes across per-bucket rate
-        # limits; the shard is chosen once per trace (record.bucket_id).
+        # limits; the bucket name is chosen once per trace (record.bucket_name).
         class S3
           include Encoding
 
@@ -50,13 +50,13 @@ module Trifle
             self.class.name
           end
 
-          def generate_bucket_id
-            rand(buckets.size)
+          def generate_bucket_name
+            buckets.sample
           end
 
           def write_part(record, part:, entries:)
             client.put_object(
-              bucket: bucket_for(record),
+              bucket: record.bucket_name,
               key: object_key(record, part_name(part)),
               body: pack_entries(entries)
             )
@@ -65,7 +65,7 @@ module Trifle
           def write_artifact(record, name:, payload: nil, path: nil)
             body = payload || ::File.open(path, 'rb')
             client.put_object(
-              bucket: bucket_for(record),
+              bucket: record.bucket_name,
               key: object_key(record, "artifacts/#{name}"),
               body: body
             )
@@ -87,7 +87,7 @@ module Trifle
           end
 
           def delete(record)
-            bucket = bucket_for(record)
+            bucket = record.bucket_name
             response = client.list_objects_v2(bucket: bucket, prefix: object_key(record, ''))
             keys = response.contents.map { |object| { key: object.key } }
             client.delete_objects(bucket: bucket, delete: { objects: keys }) if keys.any?
@@ -95,17 +95,13 @@ module Trifle
 
           private
 
-          def bucket_for(record)
-            buckets[record.bucket_id.to_i % buckets.size]
-          end
-
           def object_key(record, name)
             "#{record.retention}/#{prefix}/#{record.key}/#{record.reference}/#{name}"
           end
 
           def get(record, name)
             client.get_object(
-              bucket: bucket_for(record),
+              bucket: record.bucket_name,
               key: object_key(record, name)
             ).body.read
           end

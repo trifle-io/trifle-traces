@@ -63,7 +63,7 @@ RSpec.describe Trifle::Traces::Driver::Index::Postgres do
         key: "jobs/#{key}", state: :success, tags: [], meta: nil, context: {},
         duration: 1, counters: Trifle::Traces::TraceRecord.empty_counters,
         length: 1, parts: 1, first_at: now, last_at: now,
-        retention: 3, expires_at: expires_at, bucket_id: 0
+        retention: 3, expires_at: expires_at, bucket_name: nil
       )
     end
   else

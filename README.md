@@ -64,6 +64,10 @@ end
 - **Retention:** carried on every record (`retention` days + `expires_at`). Mongo expires metadata via TTL index; Postgres provides `cleanup!` for a scheduled job; S3 expires payloads via one lifecycle rule per retention class (`Driver::Data::S3.setup!` creates them).
 - Without configured drivers nothing persists — data stays on the tracer for your callbacks, as in 1.x.
 
+S3 selects a bucket once per trace and persists its name as `bucket_name` in the
+index. Reads, writes, and deletes use that name directly, so changing the bucket
+list does not redirect existing traces. File, Memory, and Null store `nil`.
+
 Postgres keeps the client injectable, so the gem still has no runtime
 dependencies. Add `pg` to the host application, provision the table once, and
 schedule cleanup for expired metadata:

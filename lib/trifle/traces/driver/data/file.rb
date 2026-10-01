@@ -28,8 +28,8 @@ module Trifle
             self.class.name
           end
 
-          def generate_bucket_id
-            0
+          def generate_bucket_name
+            nil
           end
 
           def write_part(record, part:, entries:)

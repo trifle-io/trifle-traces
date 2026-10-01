@@ -54,7 +54,7 @@ it to TTL columns, partition drops or index rollover as fits the backend.
 Stores the trace payload as numbered parts plus named artifacts.
 
 ```ruby
-generate_bucket_id                    # -> Integer shard id, chosen once
+generate_bucket_name                  # -> String bucket name or nil, chosen once
                                       #    per trace at liftoff.
 write_part(record, part:, entries:)   # Persist entries (array of
                                       #    {at:, message:, state:, type:, level:}).

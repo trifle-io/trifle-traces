@@ -100,7 +100,7 @@ module Trifle
               meta: record.meta&.to_json,
               first_at: record.first_at,
               retention: record.retention,
-              bucket_id: record.bucket_id
+              bucket_name: record.bucket_name
             )
           end
 
@@ -129,7 +129,7 @@ module Trifle
               last_at: document['last_at'],
               retention: document['retention'],
               expires_at: document['expires_at'],
-              bucket_id: document['bucket_id']
+              bucket_name: document['bucket_name']
             )
           end
 

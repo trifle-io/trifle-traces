@@ -20,7 +20,7 @@ RSpec.describe Trifle::Traces::Driver::Data::File do
     let(:driver) { described_class.new(path: @root) }
     let(:record) do
       Trifle::Traces::TraceRecord.new(
-        reference: 'REF123', key: 'jobs/import', retention: 3, parts: 0, bucket_id: 0
+        reference: 'REF123', key: 'jobs/import', retention: 3, parts: 0, bucket_name: nil
       )
     end
 
@@ -43,7 +43,7 @@ RSpec.describe Trifle::Traces::Driver::Data::File do
     let(:driver) { described_class.new(path: @root) }
     let(:record) do
       Trifle::Traces::TraceRecord.new(
-        reference: 'REF123', key: 'jobs/import', retention: 3, parts: 1, bucket_id: 0
+        reference: 'REF123', key: 'jobs/import', retention: 3, parts: 1, bucket_name: nil
       )
     end
 
