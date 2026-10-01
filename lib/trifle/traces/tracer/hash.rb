@@ -106,10 +106,10 @@ module Trifle
           tag
         end
 
-        def artifact(name, path)
+        def artifact(name, path, cleanup: true)
           @data << { at: now, message: name, state: :success, type: :media, size: File.size(path) }
           @artifacts << path
-          @artifact_queue << { name: name, path: path }
+          @artifact_queue << { name: name, path: path, cleanup: cleanup }
           bump
           path
         end

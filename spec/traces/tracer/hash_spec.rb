@@ -189,7 +189,7 @@ RSpec.describe Trifle::Traces::Tracer::Hash do
         expect(tracer.data.last[:type]).to eq(:media)
         expect(tracer.data.last[:size]).to eq(3)
         expect(tracer.artifacts).to eq([path])
-        expect(tracer.pop_all_artifacts).to eq([{ name: 'report', path: path }])
+        expect(tracer.pop_all_artifacts).to eq([{ name: 'report', path: path, cleanup: true }])
       end
     end
   end

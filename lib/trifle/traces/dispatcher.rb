@@ -19,6 +19,7 @@ module Trifle
         @started_at = monotonic_now
         @pending = []
         @pending_artifacts = []
+        @artifact_sources = {}
         @failed_phase = nil
         validate_capabilities!
         @record = build_record
@@ -58,6 +59,7 @@ module Trifle
         drain
         write_part unless @pending.empty? && @pending_artifacts.empty?
         live? ? index_driver.update(record) : index_driver.create(record)
+        cleanup_artifacts
       rescue StandardError => e
         handle_error(e, :wrapup)
       end
@@ -129,8 +131,29 @@ module Trifle
         until @pending_artifacts.empty?
           artifact = @pending_artifacts.first
           data_driver.write_artifact(record, name: artifact[:name], path: artifact[:path])
+          path = File.expand_path(artifact[:path])
+          @artifact_sources[path] = @artifact_sources.fetch(path, true) && artifact.fetch(:cleanup, true)
           @pending_artifacts.shift
         end
+      end
+
+      # Keep uploaded sources through bumps and failed wrapups so persistence
+      # can retry. An explicit opt-out wins when the same file is attached twice.
+      def cleanup_artifacts
+        return if data_driver.is_a?(Trifle::Traces::Driver::Data::Null)
+
+        @artifact_sources.each do |path, cleanup|
+          remove_artifact_source(path) if cleanup
+        end
+        @artifact_sources.clear
+      end
+
+      def remove_artifact_source(path)
+        File.delete(path)
+      rescue Errno::ENOENT
+        nil
+      rescue SystemCallError => e
+        warn "Trifle::Traces artifact cleanup failed for #{path}: #{e.class}: #{e.message}"
       end
 
       # Entries with oversized messages are stored as artifacts and
@@ -202,6 +225,7 @@ module Trifle
         rescue StandardError
           nil # best-effort purge; the index entry is already gone
         end
+        cleanup_artifacts
       end
 
       def handle_error(error, phase)

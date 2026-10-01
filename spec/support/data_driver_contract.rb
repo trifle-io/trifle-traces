@@ -61,6 +61,7 @@ RSpec.shared_examples 'a data driver' do
         driver.write_artifact(record, name: 'report.csv', path: path)
 
         expect(driver.read_artifact(record, name: 'report.csv')).to eq("a,b\n1,2\n")
+        expect(File.exist?(path)).to be(true) # direct writes leave ownership with the caller
       end
     end
   end

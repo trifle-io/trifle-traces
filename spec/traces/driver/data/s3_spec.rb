@@ -8,7 +8,7 @@ RSpec.describe Trifle::Traces::Driver::Data::S3 do
     let(:client) do
       double('S3 client').tap do |s3|
         allow(s3).to receive(:put_object) do |bucket:, key:, body:|
-          objects[[bucket, key]] = body
+          objects[[bucket, key]] = body.respond_to?(:read) ? body.read : body
         end
         allow(s3).to receive(:get_object) do |bucket:, key:|
           double(body: StringIO.new(objects.fetch([bucket, key])))
@@ -33,6 +33,21 @@ RSpec.describe Trifle::Traces::Driver::Data::S3 do
     end
 
     %i[live deferred].each do |mode|
+      it "removes local files after #{mode} wrapup while keeping S3 artifacts readable" do
+        Dir.mktmpdir do |dir|
+          path = File.join(dir, 'report.txt')
+          File.write(path, 'report')
+          tracer = Trifle::Traces::Tracer::Hash.new(key: 'jobs/cleanup', config: config, mode: mode)
+          Trifle::Traces.tracer = tracer
+          Trifle::Traces.artifact('public.txt', path)
+          expect(File.exist?(path)).to be(true)
+          tracer.wrapup
+
+          expect(File.exist?(path)).to be(false)
+          expect(driver.read_artifact(index.find(tracer.reference), name: 'public.txt')).to eq('report')
+        end
+      end
+
       it "keeps #{mode} traces in their recorded bucket after bucket lists change" do
         expect(driver).to receive(:generate_bucket_name).once.and_call_original
         tracer = Trifle::Traces::Tracer::Hash.new(key: 'jobs/bucket-name', config: config, mode: mode)
@@ -89,6 +104,29 @@ RSpec.describe Trifle::Traces::Driver::Data::S3 do
 
       it_behaves_like 'a data driver' do
         let(:driver) { described_class.new(client: client, buckets: buckets, gzip: true) }
+      end
+
+      %i[live deferred].each do |mode|
+        it "keeps uploaded #{mode} artifacts readable after removing their local sources" do
+          Dir.mktmpdir do |dir|
+            path = File.join(dir, 'report.txt')
+            File.write(path, 'report')
+            driver = described_class.new(client: client, buckets: buckets, gzip: true)
+            config = Trifle::Traces::Configuration.new
+            config.index_driver = Trifle::Traces::Driver::Index::Memory.new
+            config.data_driver = driver
+            config.bump_every = 0
+            tracer = Trifle::Traces::Tracer::Hash.new(key: 'jobs/cleanup', config: config, mode: mode)
+            tracer.artifact('public.txt', path)
+            expect(File.exist?(path)).to be(true)
+            tracer.wrapup
+
+            expect(File.exist?(path)).to be(false)
+            record = config.index_driver.find(tracer.reference)
+            expect(driver.read_artifact(record, name: 'public.txt')).to eq('report')
+            driver.delete(record)
+          end
+        end
       end
 
       describe 'multi-bucket sharding' do

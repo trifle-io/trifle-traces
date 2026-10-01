@@ -68,6 +68,13 @@ S3 selects a bucket once per trace and persists its name as `bucket_name` in the
 index. Reads, writes, and deletes use that name directly, so changing the bucket
 list does not redirect existing traces. File, Memory, and Null store `nil`.
 
+Automated persistence removes uploaded artifact source files after final payload
+and index writes succeed at wrapup, before wrapup callbacks. Live uploads and
+failed wrapups retain files until then. Pass `cleanup: false` to
+`Trifle::Traces.artifact(name, path, cleanup: false)` to keep a reusable source.
+Callback-only setups, Null data drivers, and direct driver writes retain sources.
+Cleanup errors warn; termination before wrapup can leave files behind.
+
 Postgres keeps the client injectable, so the gem still has no runtime
 dependencies. Add `pg` to the host application, provision the table once, and
 schedule cleanup for expired metadata:

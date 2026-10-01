@@ -16,6 +16,26 @@ RSpec.describe Trifle::Traces::Driver::Data::File do
     let(:driver) { described_class.new(path: @root, gzip: true) }
   end
 
+  %i[live deferred].each do |mode|
+    it "removes #{mode} attachment sources while preserving the filesystem copy" do
+      source = File.join(@root, 'source.txt')
+      File.write(source, 'report')
+      driver = described_class.new(path: File.join(@root, 'storage'), gzip: true)
+      config = Trifle::Traces::Configuration.new
+      config.index_driver = Trifle::Traces::Driver::Index::Memory.new
+      config.data_driver = driver
+      config.bump_every = 0
+      tracer = Trifle::Traces::Tracer::Hash.new(key: 'jobs/cleanup', config: config, mode: mode)
+      tracer.artifact('public.txt', source)
+      expect(File.exist?(source)).to be(true)
+      tracer.wrapup
+
+      expect(File.exist?(source)).to be(false)
+      record = config.index_driver.find(tracer.reference)
+      expect(driver.read_artifact(record, name: 'public.txt')).to eq('report')
+    end
+  end
+
   describe 'layout' do
     let(:driver) { described_class.new(path: @root) }
     let(:record) do

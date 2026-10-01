@@ -62,10 +62,10 @@ module Trifle
       tracer.tag(tag)
     end
 
-    def self.artifact(name, path)
+    def self.artifact(name, path, **options)
       return unless tracer
 
-      tracer.artifact(name, path)
+      tracer.artifact(name, path, **options)
     end
 
     def self.fail!

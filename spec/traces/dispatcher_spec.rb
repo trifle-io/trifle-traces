@@ -174,17 +174,133 @@ RSpec.describe Trifle::Traces::Dispatcher do
   end
 
   describe 'artifact uploads' do
-    it 'uploads files recorded via tracer.artifact' do
-      tracer = tracer_for
+    let(:path) { File.join(@artifact_dir, 'report.csv') }
+
+    around do |example|
       Dir.mktmpdir do |dir|
-        path = File.join(dir, 'report.csv')
+        @artifact_dir = dir
         File.write(path, 'a,b')
+        example.run
+      end
+    end
+
+    %i[live deferred].each do |mode|
+      it "removes the source after successful #{mode} wrapup while keeping the stored artifact" do
+        tracer = tracer_for(mode: mode)
         tracer.artifact('report', path)
+        expect(File.exist?(path)).to be(true)
+
+        config.on(:wrapup) { expect(File.exist?(path)).to be(false) }
         tracer.wrapup
 
         record = index_driver.find(tracer.reference)
         expect(data_driver.read_artifact(record, name: 'report')).to eq('a,b')
+        expect(File.exist?(path)).to be(false)
       end
+
+      it "keeps explicitly retained sources after #{mode} wrapup, including repeated attachments" do
+        tracer = tracer_for(mode: mode)
+        Trifle::Traces.tracer = tracer
+        Trifle::Traces.artifact('retained', path, cleanup: false)
+        tracer.artifact('report', path)
+        tracer.wrapup
+
+        expect(File.read(path)).to eq('a,b')
+      end
+    end
+
+    %i[write_artifact write_part create].each do |operation|
+      it "keeps sources when #{operation} fails at deferred wrapup and cleans after retry" do
+        tracer = tracer_for(mode: :deferred)
+        tracer.artifact('report', path)
+        driver = operation == :create ? index_driver : data_driver
+        allow(driver).to receive(operation).and_raise('storage down')
+
+        expect { tracer.wrapup }.to raise_error('storage down')
+        expect(File.read(path)).to eq('a,b')
+
+        allow(driver).to receive(operation).and_call_original
+        tracer.wrapup
+
+        record = index_driver.find(tracer.reference)
+        expect(data_driver.read_artifact(record, name: 'report')).to eq('a,b')
+        expect(File.exist?(path)).to be(false)
+      end
+    end
+
+    it 'keeps previously uploaded sources when the final live index update fails' do
+      tracer = tracer_for
+      tracer.artifact('report', path)
+      allow(index_driver).to receive(:update).and_raise('index down')
+
+      expect { tracer.wrapup }.to raise_error('index down')
+      expect(File.read(path)).to eq('a,b')
+
+      allow(index_driver).to receive(:update).and_call_original
+      tracer.wrapup
+      expect(File.exist?(path)).to be(false)
+    end
+
+    it 'keeps sources when a custom error handler suppresses a failed wrapup' do
+      config.error_handler = ->(*) {}
+      tracer = tracer_for(mode: :deferred)
+      tracer.artifact('report', path)
+      allow(index_driver).to receive(:create).and_raise('index down')
+      tracer.wrapup
+
+      expect(File.read(path)).to eq('a,b')
+    end
+
+    it 'keeps sources after a failed bump and cleans them after a successful wrapup retry' do
+      config.error_handler = ->(*) {}
+      tracer = tracer_for
+      allow(data_driver).to receive(:write_part).and_raise('storage down')
+      tracer.artifact('report', path)
+      expect(File.read(path)).to eq('a,b')
+
+      allow(data_driver).to receive(:write_part).and_call_original
+      tracer.wrapup
+      expect(File.exist?(path)).to be(false)
+      expect(data_driver.read_artifact(index_driver.find(tracer.reference), name: 'report')).to eq('a,b')
+    end
+
+    it 'preserves sources with callback-only persistence or the Null data driver' do
+      [Trifle::Traces::Configuration.new, config].each do |configuration|
+        configuration.data_driver = Trifle::Traces::Driver::Data::Null.new if configuration == config
+        tracer = Trifle::Traces::Tracer::Hash.new(key: 'jobs/null', config: configuration)
+        tracer.artifact('report', path)
+        tracer.wrapup
+        expect(File.read(path)).to eq('a,b')
+      end
+    end
+
+    it 'cleans uploaded sources on ignored live wrapup and preserves unuploaded deferred sources' do
+      tracer = tracer_for(mode: :deferred)
+      tracer.artifact('report', path)
+      tracer.ignore!
+      tracer.wrapup
+      expect(File.exist?(path)).to be(true)
+
+      tracer = tracer_for
+      tracer.artifact('report', path)
+      tracer.ignore!
+      tracer.wrapup
+      expect(File.exist?(path)).to be(false)
+    end
+
+    it 'tolerates already removed files and reports deletion failures without failing wrapup' do
+      tracer = tracer_for
+      tracer.artifact('report', path)
+      File.delete(path)
+      expect { tracer.wrapup }.not_to raise_error
+
+      File.write(path, 'a,b')
+      tracer = tracer_for
+      tracer.artifact('report', path)
+      allow(File).to receive(:delete).with(path).and_raise(Errno::EACCES)
+      expect { tracer.wrapup }.to output(/artifact cleanup failed/).to_stderr
+      expect(File.read(path)).to eq('a,b')
+      expect(index_driver.find(tracer.reference).state).to eq(:success)
     end
   end
 

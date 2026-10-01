@@ -12,7 +12,7 @@ module Trifle
 
         def tag(_tag); end
 
-        def artifact(_name, _path); end
+        def artifact(_name, _path, cleanup: true); end
 
         def fail!; end
 
