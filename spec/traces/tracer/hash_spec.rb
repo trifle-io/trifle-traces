@@ -159,6 +159,23 @@ RSpec.describe Trifle::Traces::Tracer::Hash do
   end
 
   describe 'user callbacks' do
+    it 'only invokes wrapup callbacks in deferred mode, even when bump_every is zero' do
+      seen = []
+      config.bump_every = 0
+      %i[liftoff bump wrapup].each do |event|
+        config.on(event) { |_tracer| seen << event }
+      end
+
+      tracer = build_tracer(mode: :deferred)
+      tracer.trace('finished')
+      tracer.tag('product:42')
+      tracer.bump
+      expect(seen).to be_empty
+
+      tracer.wrapup
+      expect(seen).to eq([:wrapup])
+    end
+
     it 'fires liftoff and wrapup callbacks with the tracer' do
       seen = []
       config.on(:liftoff) { |t| seen << [:liftoff, t.key] }
@@ -174,6 +191,28 @@ RSpec.describe Trifle::Traces::Tracer::Hash do
       config.on(:liftoff) { |_t| 'not-a-reference' }
 
       expect(build_tracer.reference).not_to eq('not-a-reference')
+    end
+  end
+
+  describe '#trace_record' do
+    it 'exposes the final persisted record to callbacks without an index read' do
+      config.index_driver = Trifle::Traces::Driver::Index::Memory.new
+      config.data_driver = Trifle::Traces::Driver::Data::Memory.new
+      allow(config.index_driver).to receive(:find).and_raise('unexpected index read')
+      callback_record = nil
+      config.on(:wrapup) { |tracer| callback_record = tracer.trace_record }
+
+      tracer = build_tracer(mode: :deferred)
+      expect(tracer.trace_record.reference).to eq(tracer.reference)
+      tracer.trace('finished')
+      tracer.tag('product:42')
+      tracer.wrapup
+
+      expect(callback_record).to equal(tracer.trace_record)
+      expect(callback_record.state).to eq(:success)
+      expect(callback_record.parts).to eq(1)
+      expect(callback_record.length).to eq(2)
+      expect(callback_record.tags).to eq(['product:42'])
     end
   end
 

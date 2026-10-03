@@ -107,6 +107,11 @@ class Commodity::PollJob
 end
 ```
 
+Deferred mode skips liftoff and bump callbacks as well as persistence. Only
+wrapup callbacks run. When a queued Sidekiq payload has no `tracer_mode`, the
+middleware uses the worker class's current option, then `config.default_mode`.
+An explicit mode in the payload takes priority.
+
 ### Reading traces back
 
 ```ruby
@@ -137,8 +142,9 @@ traces.
 
 ### Callbacks
 
-Callbacks still fire on `:liftoff`, `:bump` and `:wrapup` — use them for
-side effects like emitting metrics (persistence no longer belongs here):
+Live traces fire `:liftoff`, `:bump` and `:wrapup` callbacks. Deferred traces
+only fire `:wrapup`. Use callbacks for side effects like emitting metrics
+(persistence no longer belongs here):
 
 ```ruby
 Trifle::Traces.configure do |config|
@@ -149,6 +155,12 @@ Trifle::Traces.configure do |config|
   end
 end
 ```
+
+With persistence configured, `tracer.trace_record` exposes the dispatcher's
+in-memory record. After final writes, wrapup callbacks can read its duration
+(milliseconds), length, counters, tags, and bucket name without another index
+query. Treat this record as read-only; payload entries still come from
+`Trifle::Traces.payload(record)`.
 
 ### Upgrading from 1.x
 

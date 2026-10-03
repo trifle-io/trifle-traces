@@ -139,13 +139,16 @@ module Trifle
         end
 
         def liftoff
-          @bumped_at = now
           @dispatcher = config.dispatcher_for(self)
+          return if mode == :deferred
+
+          @bumped_at = now
           @dispatcher.liftoff
           config.on_liftoff(self)
         end
 
         def bump
+          return if mode == :deferred
           return unless @bumped_at && @bumped_at <= now - config.bump_every
 
           @bumped_at = now
@@ -157,6 +160,10 @@ module Trifle
           success! if running?
           @dispatcher.wrapup
           config.on_wrapup(self)
+        end
+
+        def trace_record
+          @dispatcher.record
         end
       end
     end
