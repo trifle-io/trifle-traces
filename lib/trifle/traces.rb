@@ -3,6 +3,7 @@
 require 'trifle/traces/ref'
 require 'trifle/traces/trace_record'
 require 'trifle/traces/configuration'
+require 'trifle/traces/stats'
 require 'trifle/traces/dispatcher'
 require 'trifle/traces/driver/index/query'
 require 'trifle/traces/driver/index/mongo'

@@ -7,7 +7,7 @@ module Trifle
       # responding to #call(tracer).
       attr_accessor :tracer_class, :callbacks, :bump_every, :serializer_class,
                     :default_mode, :payload_size_limit, :error_handler,
-                    :context, :retention
+                    :context, :retention, :stats_config
       attr_writer :index_driver, :data_driver
 
       DEFAULT_ERROR_HANDLER = lambda do |error, _tracer, phase|
@@ -26,6 +26,7 @@ module Trifle
         @error_handler = DEFAULT_ERROR_HANDLER
         @context = {}
         @retention = 7 # days
+        @stats_config = nil # opt-in Trifle::Stats activity tracking
       end
 
       def index_driver

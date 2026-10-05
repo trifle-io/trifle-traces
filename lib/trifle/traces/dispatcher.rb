@@ -51,20 +51,33 @@ module Trifle
         handle_error(e, :bump)
       end
 
-      def wrapup # rubocop:disable Metrics/AbcSize
-        return unless persistence?
+      def wrapup
+        return unless persistence? || config.stats_config
         return ignore_wrapup if tracer.ignore
 
         finalize_record
-        drain
-        write_part unless @pending.empty? && @pending_artifacts.empty?
-        live? ? index_driver.update(record) : index_driver.create(record)
-        cleanup_artifacts
+        persistence? ? persist_wrapup : record.length = tracer.data.length
+        track_stats
       rescue StandardError => e
         handle_error(e, :wrapup)
       end
 
       private
+
+      def persist_wrapup
+        drain
+        write_part unless @pending.empty? && @pending_artifacts.empty?
+        live? ? index_driver.update(record) : index_driver.create(record)
+        cleanup_artifacts
+      end
+
+      def track_stats
+        return unless config.stats_config
+        return if @stats_attempted
+
+        @stats_attempted = true
+        Stats.track(record, config.stats_config)
+      end
 
       def index_driver
         config.index_driver

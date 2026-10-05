@@ -140,6 +140,40 @@ groups, exact state, start-time range and minimum duration, newest-first with
 opaque cursor pagination. That is what stays fast at hundreds of millions of
 traces.
 
+### Activity Stats
+
+Install and require `trifle-stats`, configure a Stats instance, and pass it to
+Traces to enable native activity tracking:
+
+```ruby
+require 'trifle/stats'
+
+stats_config = Trifle::Stats::Configuration.new
+stats_config.driver = Trifle::Stats::Driver::Mongo.new(
+  mongo_client, collection_name: 'trifle_traces_stats', system_tracking: true
+)
+stats_config.granularities = %w[10m 1h 1d]
+stats_config.buffer_enabled = false
+
+Trifle::Traces.configure do |config|
+  config.stats_config = stats_config
+end
+```
+
+`stats_config` defaults to `nil`; global Stats is not used implicitly. The
+supplied configuration owns storage, granularities, timezone and buffering.
+Provision the Stats driver's indexes once before starting workers.
+
+Traces tracks the full trace key once after successful wrapup, before user
+callbacks, for live and deferred traces. Values are `count`, `states.<state>`,
+`entries.count`, and duration count/sum/square samples in milliseconds, including
+per-state samples. This is the same activity format used by Elixir and Trifle
+App. Final record metadata needs no index query. Ignored traces and failed
+final writes emit no metrics; Stats errors warn without failing the trace.
+User callbacks remain independent. Tracking also works without persistence,
+preserving callback data. See the
+[configuration docs](https://docs.trifle.io/trifle-traces/configuration#activity-metrics).
+
 ### Callbacks
 
 Live traces fire `:liftoff`, `:bump` and `:wrapup` callbacks. Deferred traces

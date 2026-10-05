@@ -13,6 +13,7 @@ RSpec.describe Trifle::Traces::Configuration do
     expect(config.default_mode).to eq(:live)
     expect(config.payload_size_limit).to eq(100 * 1024)
     expect(config.retention).to eq(7)
+    expect(config.stats_config).to be_nil
   end
 
   describe '#context_for and #retention_for' do
