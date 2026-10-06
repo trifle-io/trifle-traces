@@ -170,6 +170,9 @@ module Trifle
           end
 
           def add_cursor_filter(filter, position)
+            # Bound the scan even when Mongo evaluates the $or as a residual filter.
+            filter[:first_at] ||= {}
+            filter[:first_at]['$lte'] = position[:first_at]
             filter['$or'] = [
               { first_at: { '$lt' => position[:first_at] } },
               {
