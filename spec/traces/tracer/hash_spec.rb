@@ -60,6 +60,26 @@ RSpec.describe Trifle::Traces::Tracer::Hash do
       expect(entry[:level]).to eq(0)
     end
 
+    it 'preserves fractional Unix seconds for every row type' do
+      at = Time.at(Rational(1_700_000_000_123_456, 1_000_000))
+      allow(Time).to receive(:now).and_return(at)
+      tracer = build_tracer(mode: :deferred)
+      tracer.trace('plain')
+      tracer.trace('header', head: true)
+      tracer.trace('block') { 42 }
+
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, 'report.txt')
+        File.write(path, 'report')
+        tracer.artifact('report.txt', path)
+      end
+
+      expect(tracer.data.map { |entry| entry[:type] }.uniq).to contain_exactly(:text, :head, :raw, :media)
+      expect(tracer.data.map { |entry| entry[:at] }).to all(eq(1_700_000_000.123456))
+      expect(tracer.data.map { |entry| entry[:at] }).to all(be_a(Float))
+      expect(JSON.parse(JSON.generate(tracer.data)).map { |entry| entry['at'] }).to all(eq(at.to_f))
+    end
+
     it 'records head and custom state entries' do
       tracer = build_tracer
       tracer.trace('section', head: true, state: :error)

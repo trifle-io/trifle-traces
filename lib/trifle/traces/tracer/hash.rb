@@ -97,7 +97,7 @@ module Trifle
         end
 
         def now
-          Time.now.to_i
+          Time.now.to_f
         end
 
         def tag(tag)

@@ -37,6 +37,9 @@ Trifle::Traces.tracer.data
 #   ]
 ```
 
+Row `at` timestamps are Unix seconds with a fractional part, preserving subsecond
+precision. Existing integer-second payloads remain readable.
+
 Ideal for debugging those background-job-that-talks-to-API-and-works-every-time-when-you-run-it-manually-but-never-in-production type of jobs.
 
 ## Persistence (v2.0)

@@ -19,7 +19,7 @@ RSpec.shared_examples 'a data driver' do
   let(:entries) do
     [
       { at: 1_700_000_000, message: 'Tracer has been initialized', state: :success, type: :text, level: 0 },
-      { at: 1_700_000_001, message: 'Doing work', state: :error, type: :head, level: 1 }
+      { at: 1_700_000_001.123456, message: 'Doing work', state: :error, type: :head, level: 1 }
     ]
   end
 
@@ -33,6 +33,7 @@ RSpec.shared_examples 'a data driver' do
       expect(read.first[:state]).to eq(:success)
       expect(read.first[:type]).to eq(:text)
       expect(read.last[:level]).to eq(1)
+      expect(read.map { |entry| entry[:at] }).to eq(entries.map { |entry| entry[:at] })
     end
   end
 
